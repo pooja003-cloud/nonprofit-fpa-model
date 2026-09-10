@@ -109,7 +109,7 @@ number of large awards, and it is the input the funding-loss analysis is most
 sensitive to.
 
 **Any FY2024 budget.** No public budget exists. The budget used in
-04_Budget_vs_Actual.xlsx is a reconstruction on stated assumptions and is
+03_Budget_vs_Actual.xlsx is a reconstruction on stated assumptions and is
 labelled a simulation throughout.
 
 ## Data quality note

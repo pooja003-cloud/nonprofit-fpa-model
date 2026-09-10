@@ -1,5 +1,5 @@
 """
-03_Nonprofit_Financial_Model.xlsx  -  the centre of the project.
+02_Financial_Model.xlsx  -  the centre of the project.
 
 Historical analysis of six years of filed accounts, then a driver-based
 three-year forecast built on top of the last actual year.
@@ -22,7 +22,7 @@ from openpyxl.workbook.defined_name import DefinedName
 import inputs as I
 import styles as S
 
-OUT = Path(__file__).resolve().parents[1] / "03_Nonprofit_Financial_Model.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "excel-models" / "02_Financial_Model.xlsx"
 
 HY = I.HIST_YEARS                      # 2019..2024
 FY = I.FCST_YEARS                      # 2025..2027
@@ -628,7 +628,7 @@ def sheet_forecast(wb):
                       "Driver based: donation revenue is donor count times average gift, and program "
                       "cost is participants times cost per participant. Change a driver on "
                       "'Model inputs' and every number here moves. Scenarios live in "
-                      "05_Scenario_Model.xlsx.", width=8)
+                      "04_Scenario_Model.xlsx.", width=8)
 
     M = "'Model inputs'!"
     H = "'Historical analysis'!"
@@ -995,6 +995,7 @@ def build():
     sheet_forecast(wb)
     sheet_dashboard(wb)
     wb.move_sheet("Dashboard", offset=-4)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     wb.save(OUT)
     print(f"wrote {OUT}")
     return OUT

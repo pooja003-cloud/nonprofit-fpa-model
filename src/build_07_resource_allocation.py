@@ -1,5 +1,5 @@
 """
-07_Resource_Allocation_Model.xlsx
+06_Resource_Allocation.xlsx
 
 Allocate an incremental $1,000,000 across the four programs.
 
@@ -30,7 +30,7 @@ import styles as S
 import engine
 from common_sheets import source_data_sheet, disclaimer
 
-OUT = Path(__file__).resolve().parents[1] / "07_Resource_Allocation_Model.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "excel-models" / "06_Resource_Allocation.xlsx"
 R = {}
 A24 = "G"
 SRC = "'Source data'!"
@@ -657,6 +657,7 @@ def build():
     sheet_frontier(wb)
     sheet_solver(wb)
     wb.move_sheet("Allocation model", offset=-2)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     wb.save(OUT)
     print(f"wrote {OUT}")
     return OUT

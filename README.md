@@ -73,18 +73,30 @@ Standard 10 ceiling of 3×.
 
 ## Deliverables
 
-| File | What it contains |
+**The Excel models are the deliverable.** Read them in order — each builds on the
+one before.
+
+| `excel-models/` | What it contains |
 |---|---|
-| `01_Public_Data/` | Raw Form 990 extracts, published impact metrics, sector benchmarks, and processed analysis outputs as CSV. `SOURCES.md` records every source and — importantly — what could not be obtained. |
-| `02_Assumptions.xlsx` | All 216 model inputs, each tagged `PUBLIC` / `DERIVED` / `BENCHMARK` / `SYNTHETIC` with its source and rationale. Includes 16 live reconciliation checks proving every modelled split ties to a filed control total. |
-| `03_Nonprofit_Financial_Model.xlsx` | The centrepiece. Six years of historical analysis and a driver-based three-year forecast, with a dashboard. Every calculated cell is a live formula. |
-| `04_Budget_vs_Actual.xlsx` | FY2024 actuals against a clearly-labelled reconstructed budget, with volume/rate variance decomposition and written management commentary. |
-| `05_Scenario_Model.xlsx` | Base / Upside / Downside on a `CHOOSE`-driven scenario switch, five-year horizon, plus funding sensitivity, largest-funder loss, and two distinct minimum-funding thresholds. |
-| `06_Program_Economics.xlsx` | Per-program cost per participant, cost per outcome, completion and outcome rates, capacity utilisation, and a deliberately caveated SROI section reported as a range. |
-| `07_Resource_Allocation_Model.xlsx` | Solver-ready optimisation of $1M across four programs under three competing objectives, with a quality-floor trade-off frontier. |
-| `08_PowerBI_Dashboard/` | A validated star schema (7 dimensions, 9 fact tables), a 103-measure DAX library, and a page-by-page build guide. |
-| `09_Management_Report.pdf` | Seven-page management report answering the six recommendation questions. |
-| `10_Executive_Summary.pdf` | Two-page summary for a board or hiring manager. |
+| `01_Assumptions.xlsx` | All 216 model inputs, each tagged `PUBLIC` / `DERIVED` / `BENCHMARK` / `SYNTHETIC` with its source and rationale. Includes 16 live reconciliation checks proving every modelled split ties to a filed control total. **Start here.** |
+| `02_Financial_Model.xlsx` | The centrepiece. Six years of historical analysis and a driver-based three-year forecast, with a dashboard. Every calculated cell is a live formula. |
+| `03_Budget_vs_Actual.xlsx` | FY2024 actuals against a clearly-labelled reconstructed budget, with volume/rate variance decomposition and written management commentary. |
+| `04_Scenario_Model.xlsx` | Base / Upside / Downside on a `CHOOSE`-driven scenario switch, five-year horizon, plus funding sensitivity, largest-funder loss, and two distinct minimum-funding thresholds. |
+| `05_Program_Economics.xlsx` | Per-program cost per participant, cost per outcome, completion and outcome rates, capacity utilisation, and a deliberately caveated SROI section reported as a range. |
+| `06_Resource_Allocation.xlsx` | Solver-ready optimisation of $1M across four programs under three competing objectives, with a quality-floor trade-off frontier. |
+
+| Supporting | What it contains |
+|---|---|
+| `reports/Management_Report.pdf` | Seven-page management report answering the six recommendation questions. |
+| `reports/Executive_Summary.pdf` | Two-page summary for a board or hiring manager. |
+| `powerbi/` | A validated star schema (7 dimensions, 9 fact tables), a 103-measure DAX library, and a page-by-page build guide. |
+| `data/` | Raw Form 990 extracts, published impact metrics, sector benchmarks, and processed analysis outputs as CSV. `SOURCES.md` records every source and — importantly — what could not be obtained. |
+| `src/`, `tests/` | The build and verification harness. See [Repository layout](#repository-layout). |
+
+> **A note on the language bar.** GitHub reports this repository as Python,
+> because GitHub's language detection has no category for `.xlsx` files — it
+> cannot see the six workbooks at all. The Python exists to generate and verify
+> the Excel models, not the other way round.
 
 ## Modelling decisions worth defending
 
@@ -167,8 +179,8 @@ one implementation being self-consistent.
 
 ```bash
 pip install -r requirements.txt
-python src/build_all.py       # rebuilds all ten deliverables (~30s)
-python -m pytest tests -q     # verifies them
+python src/build_all.py       # rebuilds every deliverable from source (~1s)
+python -m pytest tests -q     # 123 tests verify them
 ```
 
 Requires LibreOffice for the verification step (`soffice` on PATH). The build
@@ -177,6 +189,14 @@ itself does not.
 ## Repository layout
 
 ```
+excel-models/       The deliverable — six workbooks, live formulas throughout
+reports/            Management report and executive summary, as PDFs
+powerbi/            Star schema, DAX measure library, build guide
+data/
+  raw/              Form 990 extracts, impact metrics, sector benchmarks
+  processed/        Analysis outputs as CSV
+  SOURCES.md        Every source, and what could not be obtained
+
 src/
   inputs.py         Single source of truth — every number, with provenance
   provenance.py     Provenance tagging and the assumptions register
@@ -228,4 +248,4 @@ ratios, the cash roll-forward and the dashboard all move.
 - [Charity Navigator rating profile, EIN 94-3346127](https://www.charitynavigator.org/ein/943346127)
 
 Full detail, including what could not be obtained, is in
-[`01_Public_Data/SOURCES.md`](01_Public_Data/SOURCES.md).
+[`data/SOURCES.md`](data/SOURCES.md).

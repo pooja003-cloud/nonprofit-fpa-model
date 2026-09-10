@@ -1,5 +1,5 @@
 """
-09_Management_Report.pdf and 10_Executive_Summary.pdf
+Management_Report.pdf and Executive_Summary.pdf
 
 Every figure quoted in both documents is pulled from the engine at build time,
 so the prose cannot drift away from the model. If an assumption changes and the
@@ -20,6 +20,7 @@ import inputs as I
 import engine
 
 ROOT = Path(__file__).resolve().parents[1]
+REPORTS = ROOT / "reports"
 NAVY = colors.HexColor("#12324F")
 INK = colors.HexColor("#1A1A1A")
 MUTED = colors.HexColor("#5F6B7A")
@@ -195,7 +196,7 @@ DISCLAIMER = (
     f"impact metrics from the organization's own published reporting. Everything else - the split "
     f"of expenses into functional categories, the four-program portfolio and its unit economics, "
     f"the composition of the balance sheet, and every forward-looking figure - is an analyst "
-    f"assumption, is labelled as such in 02_Assumptions.xlsx, and does not represent the "
+    f"assumption, is labelled as such in 01_Assumptions.xlsx, and does not represent the "
     f"organization's plans, budget or guidance."
 )
 
@@ -203,7 +204,7 @@ DISCLAIMER = (
 # ==========================================================================
 def management_report():
     W = A4[0] - 40 * mm
-    doc = Doc(ROOT / "09_Management_Report.pdf", "Management Report",
+    doc = Doc(REPORTS / "Management_Report.pdf", "Management Report",
               f"{I.ORG_NAME} - independent financial planning analysis - prepared from public data")
     s = []
 
@@ -292,7 +293,7 @@ def management_report():
     s.append(para("2. FY2024 against plan: the variance that matters", "h1"))
     s.append(para(
         "No public FY2024 budget exists, so one has been reconstructed on stated assumptions and "
-        "is labelled a simulation throughout 04_Budget_vs_Actual.xlsx. The reconstruction assumes "
+        "is labelled a simulation throughout 03_Budget_vs_Actual.xlsx. The reconstruction assumes "
         "a board approving 12% revenue growth and 26% expense growth in late FY2023 - cautious on "
         "income after two extraordinary years, deliberately expansionary on spending to deploy "
         "accumulated reserve. What the variances show is more interesting than the plan.", "body"))
@@ -412,7 +413,7 @@ def management_report():
 
     s.append(para("On social return", "h2"))
     s.append(para(
-        f"A social return figure can be calculated and is, in 06_Program_Economics.xlsx. At the "
+        f"A social return figure can be calculated and is, in 05_Program_Economics.xlsx. At the "
         f"stated parameters the portfolio ratio is "
         f"{M['sroi']['_portfolio']['sroi_ratio']:.2f} to one. It is not quoted as a headline here "
         f"because varying just two of the six parameters across plausible ranges moves it between "
@@ -607,13 +608,13 @@ def management_report():
     s.extend(rule(10, 8))
     s.append(para(DISCLAIMER, "warn"))
     doc.build(s)
-    print(f"wrote {ROOT / '09_Management_Report.pdf'}")
+    print(f"wrote {REPORTS / 'Management_Report.pdf'}")
 
 
 # ==========================================================================
 def executive_summary():
     W = A4[0] - 40 * mm
-    doc = Doc(ROOT / "10_Executive_Summary.pdf", "Executive Summary",
+    doc = Doc(REPORTS / "Executive_Summary.pdf", "Executive Summary",
               f"{I.ORG_NAME} - executive summary - independent analysis from public data")
     s = []
     cross = MVF["crossover"]
@@ -716,7 +717,7 @@ def executive_summary():
         f"Wise Giving Alliance and Propel Nonprofits. Historical totals are real and cited. The "
         f"four-program portfolio, the split of expenses into functional categories, the balance "
         f"sheet composition and every forward-looking figure are analyst assumptions, tagged by "
-        f"provenance across {len(I.REGISTER)} registered inputs in 02_Assumptions.xlsx. Of those, "
+        f"provenance across {len(I.REGISTER)} registered inputs in 01_Assumptions.xlsx. Of those, "
         f"{I.REGISTER.tier_counts()['PUBLIC']} are taken verbatim from filings, "
         f"{I.REGISTER.tier_counts()['DERIVED']} are arithmetic on public values, "
         f"{I.REGISTER.tier_counts()['BENCHMARK']} are published sector standards and "
@@ -726,10 +727,11 @@ def executive_summary():
     s.extend(rule(8, 6))
     s.append(para(DISCLAIMER, "warn"))
     doc.build(s)
-    print(f"wrote {ROOT / '10_Executive_Summary.pdf'}")
+    print(f"wrote {REPORTS / 'Executive_Summary.pdf'}")
 
 
 def build():
+    REPORTS.mkdir(parents=True, exist_ok=True)
     management_report()
     executive_summary()
 

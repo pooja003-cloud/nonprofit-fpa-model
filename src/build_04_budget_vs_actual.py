@@ -1,5 +1,5 @@
 """
-04_Budget_vs_Actual.xlsx
+03_Budget_vs_Actual.xlsx
 
 FY2024 actuals are real, taken from the filing. The budget they are measured
 against does not exist publicly, so it is reconstructed: what a board would
@@ -25,7 +25,7 @@ import styles as S
 import engine
 from common_sheets import source_data_sheet, disclaimer, HCOL
 
-OUT = Path(__file__).resolve().parents[1] / "04_Budget_vs_Actual.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "excel-models" / "03_Budget_vs_Actual.xlsx"
 R = {}
 A24, A23 = "G", "F"          # FY2024 and FY2023 columns on the source sheet
 SRC = "'Source data'!"
@@ -424,8 +424,8 @@ def sheet_commentary(wb):
          f"mix problem, not a cost problem, and cost discipline will not fix it. The relevant "
          f"question for FY2025 is not whether the extra {fmt(dec['volume_variance'])} of program "
          f"spend was justified, but whether it was spent in the right channels. "
-         f"06_Program_Economics.xlsx sets out the per-program cost per successful outcome, and "
-         f"07_Resource_Allocation_Model.xlsx shows that the answer changes entirely depending on "
+         f"05_Program_Economics.xlsx sets out the per-program cost per successful outcome, and "
+         f"06_Resource_Allocation.xlsx shows that the answer changes entirely depending on "
          f"whether management is buying placement count or earnings gain. That choice should be "
          f"made explicitly at budget time rather than emerging from where the marginal dollar "
          f"happened to land."),
@@ -478,6 +478,7 @@ def build():
     sheet_decomposition(wb)
     sheet_commentary(wb)
     wb.move_sheet("Budget vs actual", offset=-2)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     wb.save(OUT)
     print(f"wrote {OUT}")
     return OUT

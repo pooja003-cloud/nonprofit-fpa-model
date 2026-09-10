@@ -106,7 +106,7 @@ Set the KPI cards' font colour with `Program Ratio Colour`, `Runway Colour` and
 - Waterfall: `fact_variance_bridge`, category `Step`, value `Amount`, breakdown
   by `StepType` - this is the volume-versus-rate decomposition
 - Card: `Variance Direction` for the selected line
-- Text box for the commentary from `04_Budget_vs_Actual.xlsx`
+- Text box for the commentary from `03_Budget_vs_Actual.xlsx`
 
 The point of this page is the waterfall. A variance table tells a reader that
 program cost was over budget; the waterfall tells them 76%

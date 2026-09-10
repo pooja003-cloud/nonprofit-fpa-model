@@ -1,5 +1,5 @@
 """
-05_Scenario_Model.xlsx
+04_Scenario_Model.xlsx
 
 Base, Upside and Downside cases driven off a single scenario switch, plus the
 funding sensitivity work.
@@ -35,7 +35,7 @@ import styles as S
 import engine
 from common_sheets import source_data_sheet, disclaimer
 
-OUT = Path(__file__).resolve().parents[1] / "05_Scenario_Model.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "excel-models" / "04_Scenario_Model.xlsx"
 R = {}
 YEARS = engine.SENSITIVITY_HORIZON            # 2025..2029
 YCOL = {y: gcl(3 + i) for i, y in enumerate(YEARS)}   # C..G
@@ -605,6 +605,7 @@ def build():
     sheet_comparison(wb)
     sheet_sensitivity(wb)
     wb.move_sheet("Scenario switch", offset=-2)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     wb.save(OUT)
     print(f"wrote {OUT}")
     return OUT

@@ -1,5 +1,5 @@
 """
-01_Public_Data/
+data/
 
 The public record this project is built on, extracted to CSV so it can be
 checked without opening a workbook, plus a sources file recording exactly where
@@ -12,7 +12,7 @@ from pathlib import Path
 import inputs as I
 import engine
 
-ROOT = Path(__file__).resolve().parents[1] / "01_Public_Data"
+ROOT = Path(__file__).resolve().parents[1] / "data"
 RAW = ROOT / "raw"
 PROC = ROOT / "processed"
 
@@ -221,7 +221,7 @@ number of large awards, and it is the input the funding-loss analysis is most
 sensitive to.
 
 **Any FY2024 budget.** No public budget exists. The budget used in
-04_Budget_vs_Actual.xlsx is a reconstruction on stated assumptions and is
+03_Budget_vs_Actual.xlsx is a reconstruction on stated assumptions and is
 labelled a simulation throughout.
 
 ## Data quality note
@@ -244,7 +244,7 @@ def build():
     processed_programs()
     processed_assumptions()
     (ROOT / "SOURCES.md").write_text(SOURCES, encoding="utf-8")
-    print(f"  01_Public_Data/SOURCES.md")
+    print(f"  data/SOURCES.md")
     return ROOT
 
 

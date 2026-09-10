@@ -1,5 +1,5 @@
 """
-08_PowerBI_Dashboard/
+powerbi/
 
 Generates a Power BI-ready star schema, a DAX measure library and a build guide.
 
@@ -21,7 +21,7 @@ from pathlib import Path
 import inputs as I
 import engine
 
-ROOT = Path(__file__).resolve().parents[1] / "08_PowerBI_Dashboard"
+ROOT = Path(__file__).resolve().parents[1] / "powerbi"
 DATA = ROOT / "data"
 
 
@@ -964,7 +964,7 @@ Set the KPI cards' font colour with `Program Ratio Colour`, `Runway Colour` and
 - Waterfall: `fact_variance_bridge`, category `Step`, value `Amount`, breakdown
   by `StepType` - this is the volume-versus-rate decomposition
 - Card: `Variance Direction` for the selected line
-- Text box for the commentary from `04_Budget_vs_Actual.xlsx`
+- Text box for the commentary from `03_Budget_vs_Actual.xlsx`
 
 The point of this page is the waterfall. A variance table tells a reader that
 program cost was over budget; the waterfall tells them {abs(engine.budget_vs_actual()["decomposition"]["volume_variance"]) / abs(engine.budget_vs_actual()["decomposition"]["total_program_variance"]):.0%}

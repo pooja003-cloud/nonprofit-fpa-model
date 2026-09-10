@@ -40,7 +40,7 @@ SRC_IMPACT_2022 = "Upwardly Global, 2022 Annual Report 'By the Numbers' - https:
 SRC_BBB = "BBB Wise Giving Alliance, Standards for Charity Accountability, Standards 8, 9 and 10 - https://give.org/bbb-standards-for-charity-accountability"
 SRC_PROPEL = "Propel Nonprofits, Operating Reserves with Nonprofit Policy Examples - https://propelnonprofits.org/resources/operating-reserves-with-nonprofit-policy-examples/"
 SRC_CN = "Charity Navigator rating profile, EIN 94-3346127 - https://www.charitynavigator.org/ein/943346127"
-SRC_ANALYST = "Analyst assumption - see 09_Management_Report.pdf for rationale"
+SRC_ANALYST = "Analyst assumption - see Management_Report.pdf for rationale"
 
 ORG_NAME = "Upwardly Global"
 ORG_EIN = "94-3346127"

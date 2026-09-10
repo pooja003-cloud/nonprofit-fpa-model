@@ -864,7 +864,7 @@ def allocate(budget: float | None = None, constraints: dict | None = None,
     'optimal' answer.
 
     Solved with PuLP as a linear program. The Excel version in
-    07_Resource_Allocation_Model.xlsx is set up for Solver and reproduces these
+    06_Resource_Allocation.xlsx is set up for Solver and reproduces these
     answers; the test suite checks that it does.
     """
     import pulp

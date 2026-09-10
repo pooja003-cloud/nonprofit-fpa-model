@@ -1,5 +1,5 @@
 """
-02_Assumptions.xlsx
+01_Assumptions.xlsx
 
 The control document for the whole project. Every input used anywhere in the
 model appears here exactly once, with its provenance tier, its value, its unit,
@@ -19,7 +19,7 @@ import inputs as I
 import styles as S
 from provenance import TIER_ORDER, TIER_COLOR, TIER_DESCRIPTION
 
-OUT = Path(__file__).resolve().parents[1] / "02_Assumptions.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "excel-models" / "01_Assumptions.xlsx"
 
 
 def sheet_readme(wb):
@@ -64,10 +64,10 @@ def sheet_readme(wb):
          "published sector standard. SYNTHETIC means an analyst assumption. Filter the register by tier "
          "to see exactly how much of the model rests on judgement."),
         ("Where to go next",
-         "03_Nonprofit_Financial_Model.xlsx holds the historical analysis and the three-year forecast and "
-         "is the centre of the project. 05_Scenario_Model.xlsx holds the Base, Upside and Downside cases "
-         "and the funding sensitivity work. 06_Program_Economics.xlsx compares the programs. "
-         "07_Resource_Allocation_Model.xlsx solves the allocation question. 09_Management_Report.pdf "
+         "02_Financial_Model.xlsx holds the historical analysis and the three-year forecast and "
+         "is the centre of the project. 04_Scenario_Model.xlsx holds the Base, Upside and Downside cases "
+         "and the funding sensitivity work. 05_Program_Economics.xlsx compares the programs. "
+         "06_Resource_Allocation.xlsx solves the allocation question. Management_Report.pdf "
          "explains what all of it means."),
     ]
     for head, body in blocks:
@@ -394,6 +394,7 @@ def build():
     sheet_register(wb)
     sheet_sources(wb)
     sheet_reconciliation(wb)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     wb.save(OUT)
     print(f"wrote {OUT}")
     return OUT

@@ -67,7 +67,7 @@ def get(res: dict, sheet: str, coord: str):
 
 if __name__ == "__main__":
     root = Path(__file__).resolve().parents[1]
-    targets = sys.argv[1:] or sorted(str(p) for p in root.glob("0*.xlsx"))
+    targets = sys.argv[1:] or sorted(str(p) for p in root.glob("excel-models/*.xlsx"))
     total = 0
     for t in targets:
         res = scan(Path(t))

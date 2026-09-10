@@ -42,42 +42,42 @@ def rel(a, b):
 def wb03():
     import build_03_financial_model as B
     B.build()
-    return B, recalc.scan(ROOT / "03_Nonprofit_Financial_Model.xlsx", verbose=False)
+    return B, recalc.scan(ROOT / "excel-models" / "02_Financial_Model.xlsx", verbose=False)
 
 
 @pytest.fixture(scope="session")
 def wb04():
     import build_04_budget_vs_actual as B
     B.build()
-    return B, recalc.scan(ROOT / "04_Budget_vs_Actual.xlsx", verbose=False)
+    return B, recalc.scan(ROOT / "excel-models" / "03_Budget_vs_Actual.xlsx", verbose=False)
 
 
 @pytest.fixture(scope="session")
 def wb05():
     import build_05_scenario_model as B
     B.build()
-    return B, recalc.scan(ROOT / "05_Scenario_Model.xlsx", verbose=False)
+    return B, recalc.scan(ROOT / "excel-models" / "04_Scenario_Model.xlsx", verbose=False)
 
 
 @pytest.fixture(scope="session")
 def wb06():
     import build_06_program_economics as B
     B.build()
-    return B, recalc.scan(ROOT / "06_Program_Economics.xlsx", verbose=False)
+    return B, recalc.scan(ROOT / "excel-models" / "05_Program_Economics.xlsx", verbose=False)
 
 
 @pytest.fixture(scope="session")
 def wb07():
     import build_07_resource_allocation as B
     B.build()
-    return B, recalc.scan(ROOT / "07_Resource_Allocation_Model.xlsx", verbose=False)
+    return B, recalc.scan(ROOT / "excel-models" / "06_Resource_Allocation.xlsx", verbose=False)
 
 
 @pytest.fixture(scope="session")
 def wb02():
     import build_02_assumptions as B
     B.build()
-    return B, recalc.scan(ROOT / "02_Assumptions.xlsx", verbose=False)
+    return B, recalc.scan(ROOT / "excel-models" / "01_Assumptions.xlsx", verbose=False)
 
 
 ALL_WB = ["wb02", "wb03", "wb04", "wb05", "wb06", "wb07"]
@@ -263,7 +263,7 @@ def test_scenario_switch_drives_the_model(wb05, scenario, tmp_path):
     """
     from openpyxl import load_workbook
     B, _ = wb05
-    wb = load_workbook(ROOT / "05_Scenario_Model.xlsx")
+    wb = load_workbook(ROOT / "excel-models" / "04_Scenario_Model.xlsx")
     wb["Scenario switch"].cell(row=B.R["sw.sel"], column=2).value = scenario
     target = tmp_path / f"switch_{scenario}.xlsx"
     wb.save(target)

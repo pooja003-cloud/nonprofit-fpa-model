@@ -1,5 +1,5 @@
 """
-06_Program_Economics.xlsx
+05_Program_Economics.xlsx
 
 Unit economics for each of the four programs, and the comparison that tells
 management where a marginal dollar does the most good.
@@ -29,7 +29,7 @@ import styles as S
 import engine
 from common_sheets import source_data_sheet, disclaimer
 
-OUT = Path(__file__).resolve().parents[1] / "06_Program_Economics.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "excel-models" / "05_Program_Economics.xlsx"
 R = {}
 A24 = "G"
 SRC = "'Source data'!"
@@ -389,7 +389,7 @@ def sheet_comparison(wb):
         f"{cheapest} is running at {P[cheapest]['capacity_utilization']:.0%} of its ceiling and "
         f"Credential Support at {P['Credential Support']['capacity_utilization']:.0%}. Headroom, "
         f"not preference, sets the upper bound on how far funding can be tilted toward either. "
-        f"07_Resource_Allocation_Model.xlsx solves that problem explicitly.",
+        f"06_Resource_Allocation.xlsx solves that problem explicitly.",
 
         f"Partner Capacity is the weakest program on every financial measure - "
         f"${P['Partner Capacity']['cost_per_outcome']:,.0f} per placement, the second-lowest "
@@ -592,6 +592,7 @@ def build():
     sheet_calibration(wb)
     sheet_sroi(wb)
     wb.move_sheet("Program economics", offset=-3)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     wb.save(OUT)
     print(f"wrote {OUT}")
     return OUT
