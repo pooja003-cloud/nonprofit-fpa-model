@@ -1,0 +1,18 @@
+# Core model and workbook generation
+openpyxl>=3.1.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Linear programming for the resource allocation model
+pulp>=2.7.0
+
+# PDF report generation
+reportlab>=4.0.0
+
+# Verification
+pytest>=7.4.0
+
+# LibreOffice is also required for the verification step (soffice on PATH).
+# It is not a Python package; install it from your system package manager.
+#   macOS:  brew install --cask libreoffice
+#   Debian: sudo apt install libreoffice-calc

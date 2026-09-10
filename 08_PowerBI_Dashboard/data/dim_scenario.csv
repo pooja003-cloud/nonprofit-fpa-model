@@ -1,0 +1,5 @@
+ScenarioKey,Scenario,SortOrder,Narrative
+0,Actual,0,"Filed results, not a scenario."
+1,Downside,1,"Emergency appropriations lapse without replacement and a major foundation cycles out. Government funding falls 30% a year and foundation grants 22%. Cost per participant inflation runs at 7% because the fixed cost base does not shrink as fast as volume. This is the case the reserve exists for, and the case the minimum-funding analysis is built around."
+2,Base,2,"Humanitarian-response funding normalizes gradually. Foundation grants decline 6% a year and government funding 10% a year as emergency appropriations lapse, partly offset by growth in individual, corporate and earned revenue. Participants grow 6% a year and cost per participant rises 3.5%. Management holds headcount roughly flat in real terms."
+3,Upside,3,The organization converts surge-period relationships into durable multi-year commitments. Foundation funding resumes growth at 8% and government funding stabilizes. Corporate partnerships scale with the employer network. Participants grow 16% a year while cost per participant inflation stays at 2% through digital channel mix shift.

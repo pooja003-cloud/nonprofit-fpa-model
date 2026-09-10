@@ -1,0 +1,5 @@
+StepOrder,Step,StepType,Amount
+1,Budgeted program cost,Start,13476070.13
+2,Volume variance,Movement,658965.11
+3,Rate variance,Movement,211346.87
+4,Actual program cost,End,14346382.11

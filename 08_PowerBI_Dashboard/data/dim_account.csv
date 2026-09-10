@@ -1,0 +1,18 @@
+AccountKey,Statement,Category,LineItem,IsExpense,SortOrder
+1,Statement of Activities,Revenue,Contributions and grants,0,10
+2,Statement of Activities,Revenue,Program service revenue,0,20
+3,Statement of Activities,Revenue,Investment and other income,0,30
+4,Statement of Activities,Revenue,Fundraising event costs and netting,0,40
+5,Statement of Activities,Revenue,Total revenue,0,50
+6,Statement of Activities,Expense,Program services,1,60
+7,Statement of Activities,Expense,Management and general,1,70
+8,Statement of Activities,Expense,Fundraising,1,80
+9,Statement of Activities,Expense,Total expenses,1,90
+10,Statement of Activities,Result,Operating surplus / (deficit),0,100
+11,Natural Classification,Expense,Personnel,1,110
+12,Natural Classification,Expense,Non-personnel,1,120
+13,Financial Position,Asset,Total assets,0,130
+14,Financial Position,Liability,Total liabilities,0,140
+15,Financial Position,Net assets,Net assets,0,150
+16,Financial Position,Liquidity,Cash and equivalents,0,160
+17,Financial Position,Liquidity,Liquid reserves,0,170

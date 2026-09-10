@@ -1,0 +1,7 @@
+Metric,LimitType,Value,Source,Direction
+Program expense ratio,Minimum,0.65,BBB Standard 8,Higher is better
+Fundraising cost ratio,Maximum,0.35,BBB Standard 9,Lower is better
+Net assets / expenses,Maximum,3.0,BBB Standard 10,Lower is better
+Liquid reserve runway,Minimum,3.0,Propel Nonprofits,Higher is better
+Liquid reserve runway,Target,6.0,Propel Nonprofits,Higher is better
+Liquid reserve runway,Maximum,24.0,Propel Nonprofits,Lower is better

@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# Excel and LibreOffice lock/temp files
+~$*.xlsx
+.~lock.*#
+*.tmp
+
+# Power BI working files - the .pbix is built by the user from 08_PowerBI_Dashboard/
+*.pbix
+*.pbit
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

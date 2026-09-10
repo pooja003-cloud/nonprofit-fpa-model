@@ -1,0 +1,13 @@
+Objective,ObjectiveLabel,ProgramKey,Allocation,Share,AdditionalParticipants,AdditionalOutcomes,AdditionalEarnings,AdditionalHours,CapacityAfter,BindingCapacity,BindingMaxShare,BindingMinShare
+outcomes,Maximize the number of additional job placements,1,308000.0,0.35,80.03,33.611,2050249.41,3120.99,0.6265,0,0,0
+outcomes,Maximize the number of additional job placements,2,484000.0,0.55,1612.24,72.6,2686199.98,4030.61,0.6005,0,1,0
+outcomes,Maximize the number of additional job placements,3,44000.0,0.05,10.48,3.248,285790.47,628.57,0.6178,0,0,1
+outcomes,Maximize the number of additional job placements,4,44000.0,0.05,21.76,2.817,130993.8,339.06,0.4418,0,0,1
+earnings,Maximize the total first-year earnings gain generated,1,484000.0,0.55,125.75,52.817,3221820.51,4904.41,0.6399,0,1,0
+earnings,Maximize the total first-year earnings gain generated,2,44000.0,0.05,146.57,6.6,244200.0,366.42,0.5028,0,0,1
+earnings,Maximize the total first-year earnings gain generated,3,308000.0,0.35,73.33,22.733,2000533.32,4400.0,0.6725,0,0,0
+earnings,Maximize the total first-year earnings gain generated,4,44000.0,0.05,21.76,2.817,130993.8,339.06,0.4418,0,0,1
+balanced,Maximize placements subject to an average earnings-gain floor per placement,1,384901.53,0.4374,100.01,42.003,2562156.29,3900.24,0.6324,0,0,0
+balanced,Maximize placements subject to an average earnings-gain floor per placement,2,407098.47,0.4626,1356.08,61.065,2259396.49,3390.2,0.5834,0,0,0
+balanced,Maximize placements subject to an average earnings-gain floor per placement,3,44000.0,0.05,10.48,3.248,285790.47,628.57,0.6178,0,0,1
+balanced,Maximize placements subject to an average earnings-gain floor per placement,4,44000.0,0.05,21.76,2.817,130993.8,339.06,0.4418,0,0,1

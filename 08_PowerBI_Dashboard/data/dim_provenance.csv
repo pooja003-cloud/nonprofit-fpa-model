@@ -1,0 +1,5 @@
+TierKey,Tier,TierDescription,SortOrder
+1,PUBLIC,Verbatim from a public filing or publication,1
+2,DERIVED,"Arithmetic on public values only, by the stated method",2
+3,BENCHMARK,Published sector standard or peer statistic,3
+4,SYNTHETIC,Analyst assumption - not organizational data or guidance,4

@@ -1,0 +1,12 @@
+Year,YearLabel,PeriodType,IsBaseYear,SortOrder
+2019,FY2019,Actual,0,1
+2020,FY2020,Actual,0,2
+2021,FY2021,Actual,0,3
+2022,FY2022,Actual,0,4
+2023,FY2023,Actual,0,5
+2024,FY2024,Actual,1,6
+2025,FY2025,Estimate,0,7
+2026,FY2026,Forecast,0,8
+2027,FY2027,Forecast,0,9
+2028,FY2028,Forecast,0,10
+2029,FY2029,Forecast,0,11

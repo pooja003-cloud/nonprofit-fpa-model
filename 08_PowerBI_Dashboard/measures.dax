@@ -1,0 +1,480 @@
+// =====================================================================
+// Nonprofit Financial Planning - DAX measure library
+//
+// Paste these into Power BI Desktop. Create a blank measure and paste one
+// block at a time, or use Tabular Editor to import the file wholesale.
+//
+// Naming convention: measures are grouped by a leading comment block. A few
+// measures depend on others; those are noted where it matters.
+//
+// The model expects these relationships (all single-direction, many-to-one
+// from fact to dimension):
+//   fact_financials[Year]        -> dim_year[Year]
+//   fact_financials[ScenarioKey] -> dim_scenario[ScenarioKey]
+//   fact_financials[AccountKey]  -> dim_account[AccountKey]
+//   fact_program[Year]           -> dim_year[Year]
+//   fact_program[ScenarioKey]    -> dim_scenario[ScenarioKey]
+//   fact_program[ProgramKey]     -> dim_program[ProgramKey]
+//   fact_funding[Year]           -> dim_year[Year]
+//   fact_funding[ScenarioKey]    -> dim_scenario[ScenarioKey]
+//   fact_funding[SourceKey]      -> dim_funding_source[SourceKey]
+//   fact_budget_variance[Year]       -> dim_year[Year]
+//   fact_budget_variance[AccountKey] -> dim_account[AccountKey]
+//   fact_allocation[ProgramKey]  -> dim_program[ProgramKey]
+//
+// fact_sensitivity and fact_quality_tradeoff are standalone; slice them on
+// their own columns rather than wiring them into the star.
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+// 1. Base amount selectors
+// ---------------------------------------------------------------------
+
+Amount =
+SUM ( fact_financials[Amount] )
+
+_Line =
+// Helper pattern. Not a measure to expose; shown so the ones below read clearly.
+// Every line measure filters fact_financials to a single account.
+BLANK ()
+
+Total Revenue =
+CALCULATE ( [Amount], dim_account[LineItem] = "Total revenue" )
+
+Total Expenses =
+CALCULATE ( [Amount], dim_account[LineItem] = "Total expenses" )
+
+Contributions =
+CALCULATE ( [Amount], dim_account[LineItem] = "Contributions and grants" )
+
+Program Service Revenue =
+CALCULATE ( [Amount], dim_account[LineItem] = "Program service revenue" )
+
+Investment Income =
+CALCULATE ( [Amount], dim_account[LineItem] = "Investment and other income" )
+
+Program Expense =
+CALCULATE ( [Amount], dim_account[LineItem] = "Program services" )
+
+Management and General =
+CALCULATE ( [Amount], dim_account[LineItem] = "Management and general" )
+
+Fundraising Expense =
+CALCULATE ( [Amount], dim_account[LineItem] = "Fundraising" )
+
+Personnel Cost =
+CALCULATE ( [Amount], dim_account[LineItem] = "Personnel" )
+
+Net Assets =
+CALCULATE ( [Amount], dim_account[LineItem] = "Net assets" )
+
+Liquid Reserves =
+CALCULATE ( [Amount], dim_account[LineItem] = "Liquid reserves" )
+
+Cash =
+CALCULATE ( [Amount], dim_account[LineItem] = "Cash and equivalents" )
+
+Operating Result =
+[Total Revenue] - [Total Expenses]
+
+Operating Margin =
+DIVIDE ( [Operating Result], [Total Revenue] )
+
+
+// ---------------------------------------------------------------------
+// 2. Stewardship ratios
+// ---------------------------------------------------------------------
+
+Program Expense Ratio =
+DIVIDE ( [Program Expense], [Total Expenses] )
+
+Administrative Ratio =
+DIVIDE ( [Management and General], [Total Expenses] )
+
+Fundraising Cost Ratio =
+DIVIDE ( [Fundraising Expense], [Contributions] )
+
+Cost to Raise a Dollar =
+// Same quantity as the ratio above, formatted as currency for a card visual.
+DIVIDE ( [Fundraising Expense], [Contributions] )
+
+Fundraising Return =
+DIVIDE ( [Contributions], [Fundraising Expense] )
+
+Personnel Ratio =
+DIVIDE ( [Personnel Cost], [Total Expenses] )
+
+
+// ---------------------------------------------------------------------
+// 3. Liquidity and reserves
+// ---------------------------------------------------------------------
+
+Monthly Expenses =
+DIVIDE ( [Total Expenses], 12 )
+
+Cash Runway Months =
+DIVIDE ( [Cash], [Monthly Expenses] )
+
+Liquid Runway Months =
+DIVIDE ( [Liquid Reserves], [Monthly Expenses] )
+
+Net Asset Multiple =
+DIVIDE ( [Net Assets], [Total Expenses] )
+
+Net Asset Months =
+DIVIDE ( [Net Assets], [Monthly Expenses] )
+
+BBB Accumulation Headroom =
+// Positive means there is room below the three-times ceiling.
+3 - [Net Asset Multiple]
+
+Reserve Floor Breach =
+IF ( [Liquid Runway Months] < 6, 1, 0 )
+
+
+// ---------------------------------------------------------------------
+// 4. Growth
+// ---------------------------------------------------------------------
+
+Revenue PY =
+CALCULATE ( [Total Revenue], DATEADD ( dim_year[Year], -1, YEAR ) )
+
+Revenue Growth =
+VAR Prior =
+    CALCULATE ( [Total Revenue], dim_year[Year] = SELECTEDVALUE ( dim_year[Year] ) - 1 )
+RETURN
+    DIVIDE ( [Total Revenue] - Prior, Prior )
+
+Expense Growth =
+VAR Prior =
+    CALCULATE ( [Total Expenses], dim_year[Year] = SELECTEDVALUE ( dim_year[Year] ) - 1 )
+RETURN
+    DIVIDE ( [Total Expenses] - Prior, Prior )
+
+Contribution Growth =
+VAR Prior =
+    CALCULATE ( [Contributions], dim_year[Year] = SELECTEDVALUE ( dim_year[Year] ) - 1 )
+RETURN
+    DIVIDE ( [Contributions] - Prior, Prior )
+
+Growth Gap =
+// Revenue growth less expense growth. Positive is what built the reserve.
+[Revenue Growth] - [Expense Growth]
+
+Revenue CAGR =
+VAR FirstYear = MIN ( dim_year[Year] )
+VAR LastYear  = MAX ( dim_year[Year] )
+VAR Periods   = LastYear - FirstYear
+VAR StartVal  = CALCULATE ( [Total Revenue], dim_year[Year] = FirstYear )
+VAR EndVal    = CALCULATE ( [Total Revenue], dim_year[Year] = LastYear )
+RETURN
+    IF ( Periods > 0 && StartVal > 0, ( EndVal / StartVal ) ^ ( 1 / Periods ) - 1 )
+
+Expense CAGR =
+VAR FirstYear = MIN ( dim_year[Year] )
+VAR LastYear  = MAX ( dim_year[Year] )
+VAR Periods   = LastYear - FirstYear
+VAR StartVal  = CALCULATE ( [Total Expenses], dim_year[Year] = FirstYear )
+VAR EndVal    = CALCULATE ( [Total Expenses], dim_year[Year] = LastYear )
+RETURN
+    IF ( Periods > 0 && StartVal > 0, ( EndVal / StartVal ) ^ ( 1 / Periods ) - 1 )
+
+Cumulative Operating Result =
+CALCULATE (
+    [Operating Result],
+    FILTER ( ALLSELECTED ( dim_year ), dim_year[Year] <= MAX ( dim_year[Year] ) )
+)
+
+
+// ---------------------------------------------------------------------
+// 5. Program economics
+// ---------------------------------------------------------------------
+
+Participants =
+SUM ( fact_program[Participants] )
+
+Completers =
+SUM ( fact_program[Completers] )
+
+Outcomes =
+SUM ( fact_program[Outcomes] )
+
+Program Cost =
+SUM ( fact_program[ProgramCost] )
+
+Staff Hours =
+SUM ( fact_program[StaffHours] )
+
+Earnings Gain =
+SUM ( fact_program[EarningsGain] )
+
+Completion Rate =
+DIVIDE ( [Completers], [Participants] )
+
+Outcome Rate =
+DIVIDE ( [Outcomes], [Participants] )
+
+Outcome Rate of Completers =
+DIVIDE ( [Outcomes], [Completers] )
+
+Cost per Participant =
+DIVIDE ( [Program Cost], [Participants] )
+
+Cost per Completer =
+DIVIDE ( [Program Cost], [Completers] )
+
+Cost per Outcome =
+DIVIDE ( [Program Cost], [Outcomes] )
+
+Staff Hours per Outcome =
+DIVIDE ( [Staff Hours], [Outcomes] )
+
+Earnings Gain per Dollar =
+DIVIDE ( [Earnings Gain], [Program Cost] )
+
+Average Gain per Outcome =
+DIVIDE ( [Earnings Gain], [Outcomes] )
+
+Capacity Utilisation =
+DIVIDE ( [Participants], SUM ( dim_program[MaxParticipants] ) )
+
+Indirect Cost Share =
+DIVIDE ( SUM ( fact_program[IndirectCost] ), [Program Cost] )
+
+Cost per Outcome Rank =
+RANKX ( ALLSELECTED ( dim_program[Program] ), [Cost per Outcome], , ASC, DENSE )
+
+
+// ---------------------------------------------------------------------
+// 6. Budget versus actual
+// ---------------------------------------------------------------------
+
+Budget =
+SUM ( fact_budget_variance[Budget] )
+
+Actual =
+SUM ( fact_budget_variance[Actual] )
+
+Variance =
+[Actual] - [Budget]
+
+Variance Pct =
+DIVIDE ( [Variance], ABS ( [Budget] ) )
+
+Variance Direction =
+// Expense lines are favourable when actual comes in below budget.
+VAR IsExpense = SELECTEDVALUE ( dim_account[IsExpense] )
+RETURN
+    SWITCH (
+        TRUE (),
+        [Variance] = 0, "On plan",
+        IsExpense = 1 && [Variance] < 0, "Favourable",
+        IsExpense = 1 && [Variance] > 0, "Unfavourable",
+        [Variance] > 0, "Favourable",
+        "Unfavourable"
+    )
+
+Variance Colour =
+SWITCH ( [Variance Direction], "Favourable", "#1B5E20", "Unfavourable", "#B71C1C", "#5F6B7A" )
+
+Absolute Variance =
+ABS ( [Variance] )
+
+
+// ---------------------------------------------------------------------
+// 7. Funding mix and concentration
+// ---------------------------------------------------------------------
+
+Funding Amount =
+SUM ( fact_funding[Amount] )
+
+Donors =
+SUM ( fact_funding[Donors] )
+
+Average Gift =
+DIVIDE ( [Funding Amount], [Donors] )
+
+Funding Share =
+DIVIDE (
+    [Funding Amount],
+    CALCULATE ( [Funding Amount], ALL ( dim_funding_source ) )
+)
+
+Institutional Funding Share =
+DIVIDE (
+    CALCULATE (
+        [Funding Amount],
+        dim_funding_source[FundingSource] IN { "Foundation grants", "Government funding" }
+    ),
+    CALCULATE ( [Funding Amount], ALL ( dim_funding_source ) )
+)
+
+Largest Source Share =
+VAR Amounts =
+    ADDCOLUMNS (
+        ALLSELECTED ( dim_funding_source[FundingSource] ),
+        "@amt", [Funding Amount]
+    )
+VAR Top = MAXX ( Amounts, [@amt] )
+VAR Total = SUMX ( Amounts, [@amt] )
+RETURN
+    DIVIDE ( Top, Total )
+
+
+// ---------------------------------------------------------------------
+// 8. Scenario selection
+// ---------------------------------------------------------------------
+
+Selected Scenario =
+SELECTEDVALUE ( dim_scenario[Scenario], "All scenarios" )
+
+Scenario Narrative =
+SELECTEDVALUE ( dim_scenario[Narrative] )
+
+Base Case Result =
+CALCULATE ( [Operating Result], dim_scenario[Scenario] = "Base" )
+
+Result vs Base =
+[Operating Result] - [Base Case Result]
+
+Scenario Spread =
+VAR Up   = CALCULATE ( [Operating Result], dim_scenario[Scenario] = "Upside" )
+VAR Down = CALCULATE ( [Operating Result], dim_scenario[Scenario] = "Downside" )
+RETURN
+    Up - Down
+
+First Deficit Year =
+CALCULATE (
+    MIN ( dim_year[Year] ),
+    FILTER (
+        ALLSELECTED ( dim_year ),
+        CALCULATE ( [Operating Result] ) < 0
+    )
+)
+
+
+// ---------------------------------------------------------------------
+// 9. Funding sensitivity  (standalone table)
+// ---------------------------------------------------------------------
+
+Sensitivity Final Result =
+SUM ( fact_sensitivity[FinalYearResult] )
+
+Sensitivity Structural Result =
+SUM ( fact_sensitivity[StructuralResult] )
+
+Sensitivity Runway =
+AVERAGE ( fact_sensitivity[LiquidRunwayMonths] )
+
+Sensitivity Outcomes =
+SUM ( fact_sensitivity[Outcomes] )
+
+Sensitivity Outcomes Lost =
+SUM ( fact_sensitivity[OutcomesLost] )
+
+Sensitivity Capacity Retained =
+AVERAGE ( fact_sensitivity[CapacityRetained] )
+
+Years to Reserve Floor =
+AVERAGE ( fact_sensitivity[YearsToReserveFloor] )
+
+Max Sustainable Shock =
+CALCULATE (
+    MAX ( fact_sensitivity[FundingShock] ),
+    fact_sensitivity[BreachesFloor] = 0
+)
+
+
+// ---------------------------------------------------------------------
+// 10. Resource allocation  (standalone table)
+// ---------------------------------------------------------------------
+
+Allocation =
+SUM ( fact_allocation[Allocation] )
+
+Additional Outcomes =
+SUM ( fact_allocation[AdditionalOutcomes] )
+
+Additional Earnings =
+SUM ( fact_allocation[AdditionalEarnings] )
+
+Allocation Avg Gain =
+DIVIDE ( [Additional Earnings], [Additional Outcomes] )
+
+Allocation Cost per Outcome =
+DIVIDE ( [Allocation], [Additional Outcomes] )
+
+Outcomes Forgone vs Best =
+VAR Best =
+    MAXX (
+        ALLSELECTED ( fact_allocation[Objective] ),
+        CALCULATE ( SUM ( fact_allocation[AdditionalOutcomes] ) )
+    )
+RETURN
+    Best - [Additional Outcomes]
+
+
+// ---------------------------------------------------------------------
+// 11. Benchmark status  (drives conditional formatting and KPI cards)
+// ---------------------------------------------------------------------
+
+Program Ratio Status =
+IF ( [Program Expense Ratio] >= 0.65, "Meets BBB Standard 8", "Below BBB Standard 8" )
+
+Program Ratio Colour =
+IF ( [Program Expense Ratio] >= 0.65, "#1B5E20", "#B71C1C" )
+
+Fundraising Ratio Status =
+IF ( [Fundraising Cost Ratio] <= 0.35, "Meets BBB Standard 9", "Above BBB Standard 9" )
+
+Accumulation Status =
+SWITCH (
+    TRUE (),
+    [Net Asset Multiple] > 3, "Above BBB Standard 10 ceiling",
+    [Net Asset Multiple] > 2, "Approaching the ceiling",
+    "Within range"
+)
+
+Accumulation Colour =
+SWITCH (
+    TRUE (),
+    [Net Asset Multiple] > 3, "#B71C1C",
+    [Net Asset Multiple] > 2, "#9A3412",
+    "#1B5E20"
+)
+
+Runway Status =
+SWITCH (
+    TRUE (),
+    [Liquid Runway Months] < 3,  "Below minimum reserve",
+    [Liquid Runway Months] < 6,  "Below target reserve",
+    [Liquid Runway Months] > 24, "Above the reserve ceiling",
+    "Within target range"
+)
+
+Runway Colour =
+SWITCH (
+    TRUE (),
+    [Liquid Runway Months] < 6,  "#B71C1C",
+    [Liquid Runway Months] > 24, "#9A3412",
+    "#1B5E20"
+)
+
+
+// ---------------------------------------------------------------------
+// 12. Report furniture
+// ---------------------------------------------------------------------
+
+Period Type =
+SELECTEDVALUE ( dim_year[PeriodType], "Mixed" )
+
+Forecast Flag =
+IF ( SELECTEDVALUE ( dim_year[PeriodType] ) <> "Actual", "Forecast - analyst assumptions", "" )
+
+Data Provenance Note =
+"Historical figures are from IRS Form 990 filings. Program-level detail and all "
+    & "forward-looking figures are analyst assumptions and are not the organization's guidance."
+
+Selected Year Label =
+SELECTEDVALUE ( dim_year[YearLabel], "All years" )
