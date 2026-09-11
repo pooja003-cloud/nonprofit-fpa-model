@@ -799,3 +799,21 @@ def test_the_build_guide_quotes_the_real_measure_count(pbi_built):
     assert f"{n} measures in twelve groups" in guide, \
         f"the guide does not quote the actual count of {n}"
     assert "103" not in guide, "a stale measure count survives in the guide"
+
+
+def test_no_variable_is_named_after_a_reserved_word(pbi_built):
+    """
+    The DAX query parser reserves words the expression parser does not, so a
+    measure that Power BI Desktop accepts can still be rejected inside a DEFINE
+    block. "VAR Top" was the one that bit: valid as a measure, refused as a
+    query with "The syntax for 'Top' is incorrect".
+    """
+    reserved = {
+        "top", "total", "order", "by", "start", "at", "define", "measure",
+        "column", "table", "evaluate", "var", "return", "asc", "desc", "skip",
+        "dense", "not", "in", "true", "false", "blank", "row", "sample",
+    }
+    for path in (PBI_DAX, PBI_DAX_QUERY):
+        names = _re.findall(r"\bVAR\s+([A-Za-z_][A-Za-z0-9_]*)", path.read_text())
+        clashes = sorted({n for n in names if n.lower() in reserved})
+        assert not clashes, f"{path.name}: variable named after a reserved word: {clashes}"

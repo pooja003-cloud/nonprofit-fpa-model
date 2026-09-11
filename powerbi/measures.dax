@@ -319,10 +319,14 @@ VAR Amounts =
         ALLSELECTED ( dim_funding_source[FundingSource] ),
         "@amt", [Funding Amount]
     )
-VAR Top = MAXX ( Amounts, [@amt] )
-VAR Total = SUMX ( Amounts, [@amt] )
+// Top and Total look like ordinary variable names, but the DAX query parser
+// treats them as reserved and rejects the definition with "The syntax for
+// 'Top' is incorrect" - an error the measure editor in Desktop never raises,
+// because it parses an expression rather than a query.
+VAR Largest = MAXX ( Amounts, [@amt] )
+VAR AllSources = SUMX ( Amounts, [@amt] )
 RETURN
-    DIVIDE ( Top, Total )
+    DIVIDE ( Largest, AllSources )
 
 
 // ---------------------------------------------------------------------

@@ -155,13 +155,13 @@ discrepancy was found by a reconciliation check, not by reading the form.
 
 ## Verification
 
-139 automated tests. Every workbook is recalculated headlessly with LibreOffice —
+140 automated tests. Every workbook is recalculated headlessly with LibreOffice —
 which forces evaluation of formulas `openpyxl` writes but never computes — and
 the results are checked against an independent Python implementation of the same
 model.
 
 ```bash
-python -m pytest tests -q     # 139 passed
+python -m pytest tests -q     # 140 passed
 ```
 
 The tests confirm: no formula errors in any workbook; Excel and Python agree to 1
@@ -180,7 +180,7 @@ one implementation being self-consistent.
 ```bash
 pip install -r requirements.txt
 python src/build_all.py       # rebuilds every deliverable from source (~1s)
-python -m pytest tests -q     # 139 tests verify them
+python -m pytest tests -q     # 140 tests verify them
 ```
 
 Requires LibreOffice for the verification step (`soffice` on PATH). The build
