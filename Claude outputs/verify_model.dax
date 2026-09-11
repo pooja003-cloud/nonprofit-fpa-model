@@ -1,0 +1,121 @@
+// =====================================================================
+// Nonprofit Financial Planning - model verification query
+//
+// Run this in DAX query view once the measures are created. It checks
+// the deployed semantic model against the FY2024 figures and returns
+// one row per check.
+//
+// Every row should read OK and every Difference should be 0. A whole
+// column of wrong numbers points at the relationships; a single wrong
+// row points at that measure.
+//
+// FY2024 is an actual, so it carries one scenario and needs no scenario
+// filter. Forecast years hold Downside, Base and Upside side by side, so
+// a visual spanning those years without a scenario slicer sums all three
+// and reads about three times too high. That is the model working as
+// designed, not a defect - but it is the first thing to suspect when a
+// forecast number looks implausible.
+// =====================================================================
+
+EVALUATE
+VAR Yr = 2024
+VAR Tol = 0.000001
+VAR v0 = CALCULATE ( [Total Revenue], dim_year[Year] = Yr )
+VAR v1 = CALCULATE ( [Total Expenses], dim_year[Year] = Yr )
+VAR v2 = CALCULATE ( [Operating Result], dim_year[Year] = Yr )
+VAR v3 = CALCULATE ( [Program Expense Ratio], dim_year[Year] = Yr )
+VAR v4 = CALCULATE ( [Administrative Ratio], dim_year[Year] = Yr )
+VAR v5 = CALCULATE ( [Fundraising Cost Ratio], dim_year[Year] = Yr )
+VAR v6 = CALCULATE ( [Net Assets], dim_year[Year] = Yr )
+VAR v7 = CALCULATE ( [Net Asset Multiple], dim_year[Year] = Yr )
+VAR v8 = CALCULATE ( [Liquid Runway Months], dim_year[Year] = Yr )
+VAR v9 = CALCULATE ( [Total Participants], dim_year[Year] = Yr )
+VAR v10 = CALCULATE ( [Total Outcomes], dim_year[Year] = Yr )
+VAR v11 = CALCULATE ( [Cost per Outcome], dim_year[Year] = Yr )
+RETURN
+    UNION (
+        ROW (
+            "Check", "Total revenue",
+            "Expected", 28580411.0,
+            "Power BI", v0,
+            "Difference", v0 - 28580411.0,
+            "Status", IF ( ABS ( v0 - 28580411.0 ) <= Tol * ABS ( 28580411.0 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Total expenses",
+            "Expected", 18275646.0,
+            "Power BI", v1,
+            "Difference", v1 - 18275646.0,
+            "Status", IF ( ABS ( v1 - 18275646.0 ) <= Tol * ABS ( 18275646.0 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Operating result",
+            "Expected", 10304765.0,
+            "Power BI", v2,
+            "Difference", v2 - 10304765.0,
+            "Status", IF ( ABS ( v2 - 10304765.0 ) <= Tol * ABS ( 10304765.0 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Program expense ratio",
+            "Expected", 0.7849999999999999,
+            "Power BI", v3,
+            "Difference", v3 - 0.7849999999999999,
+            "Status", IF ( ABS ( v3 - 0.7849999999999999 ) <= Tol * ABS ( 0.7849999999999999 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Administrative ratio",
+            "Expected", 0.12,
+            "Power BI", v4,
+            "Difference", v4 - 0.12,
+            "Status", IF ( ABS ( v4 - 0.12 ) <= Tol * ABS ( 0.12 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Fundraising cost ratio",
+            "Expected", 0.0667554119716363,
+            "Power BI", v5,
+            "Difference", v5 - 0.0667554119716363,
+            "Status", IF ( ABS ( v5 - 0.0667554119716363 ) <= Tol * ABS ( 0.0667554119716363 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Net assets",
+            "Expected", 39907054.0,
+            "Power BI", v6,
+            "Difference", v6 - 39907054.0,
+            "Status", IF ( ABS ( v6 - 39907054.0 ) <= Tol * ABS ( 39907054.0 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Net asset multiple",
+            "Expected", 2.1836193369033303,
+            "Power BI", v7,
+            "Difference", v7 - 2.1836193369033303,
+            "Status", IF ( ABS ( v7 - 2.1836193369033303 ) <= Tol * ABS ( 2.1836193369033303 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Liquid runway months",
+            "Expected", 23.80216819695457,
+            "Power BI", v8,
+            "Difference", v8 - 23.80216819695457,
+            "Status", IF ( ABS ( v8 - 23.80216819695457 ) <= Tol * ABS ( 23.80216819695457 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Participants",
+            "Expected", 10786.0,
+            "Power BI", v9,
+            "Difference", v9 - 10786.0,
+            "Status", IF ( ABS ( v9 - 10786.0 ) <= Tol * ABS ( 10786.0 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Outcomes",
+            "Expected", 1494.0,
+            "Power BI", v10,
+            "Difference", v10 - 1494.0,
+            "Status", IF ( ABS ( v10 - 1494.0 ) <= Tol * ABS ( 1494.0 ) + 0.005, "OK", "CHECK" )
+        ),
+        ROW (
+            "Check", "Cost per outcome",
+            "Expected", 9602.665401606426,
+            "Power BI", v11,
+            "Difference", v11 - 9602.665401606426,
+            "Status", IF ( ABS ( v11 - 9602.665401606426 ) <= Tol * ABS ( 9602.665401606426 ) + 0.005, "OK", "CHECK" )
+        )
+    )

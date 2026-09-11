@@ -1370,10 +1370,12 @@ Set the KPI cards' font colour with `Program Ratio Colour`, `Runway Colour` and
 
 ### Page 2 - Budget performance
 
-- Matrix: rows `dim_account[LineItem]`, values `Budget`, `Actual`, `Variance`,
-  `Variance Pct`, conditionally formatted on `Variance Colour`
-- Waterfall: `fact_variance_bridge`, category `Step`, value `Amount`, breakdown
-  by `StepType` - this is the volume-versus-rate decomposition
+- Matrix: rows `dim_account[LineItem]`, values `Total Budget`, `Total Actual`,
+  `Total Variance`, `Variance Pct`, conditionally formatted on
+  `Variance Colour`
+- Waterfall: `fact_variance_bridge`, category `fact_variance_bridge[Step]`,
+  value `fact_variance_bridge[Amount]`, breakdown `fact_variance_bridge[StepType]`
+  - this is the volume-versus-rate decomposition
 - Card: `Variance Direction` for the selected line
 - Text box for the commentary from `03_Budget_vs_Actual.xlsx`
 
@@ -1383,8 +1385,9 @@ of the overrun was serving more people and the rest was unit cost.
 
 ### Page 3 - Programs
 
-- Table: `dim_program[Program]` with `Participants`, `Outcomes`, `Outcome Rate`,
-  `Cost per Participant`, `Cost per Outcome`, `Earnings Gain per Dollar`
+- Table: `dim_program[Program]` with `Total Participants`, `Total Outcomes`,
+  `Outcome Rate`, `Cost per Participant`, `Cost per Outcome`,
+  `Earnings Gain per Dollar`
 - Scatter: X `Cost per Outcome`, Y `Average Gain per Outcome`, size
   `Program Cost`, legend `dim_program[Program]`. This single visual carries the
   whole finding - the cheap programs and the high-value programs are different
@@ -1398,7 +1401,7 @@ of the overrun was serving more people and the rest was unit cost.
   forecast using `dim_year[PeriodType]` on the legend
 - Line chart: `Liquid Reserves` by year
 - Card: `First Deficit Year` - the crossover into structural deficit
-- Line chart: `Participants` and `Outcomes` by year
+- Line chart: `Total Participants` and `Total Outcomes` by year
 
 ### Page 5 - Scenarios
 
@@ -1406,7 +1409,7 @@ of the overrun was serving more people and the rest was unit cost.
 - Line chart: `Liquid Runway Months` by year, legend scenario, reference line at 6
 - Card: `Scenario Spread`
 - Table: scenario, `Total Revenue`, `Total Expenses`, `Operating Result`,
-  `Outcomes` for the final forecast year
+  `Total Outcomes` for the final forecast year
 - Text box bound to `Scenario Narrative`
 
 ### Page 6 - Funding and sensitivity
@@ -1414,18 +1417,21 @@ of the overrun was serving more people and the rest was unit cost.
 - Donut or bar: `Funding Amount` by `dim_funding_source[FundingSource]`
 - Card: `Institutional Funding Share` - the concentration measure that matters
   most for this organization
-- Line chart from `fact_sensitivity`: `Sensitivity Runway` by `FundingShock`,
-  legend `Scenario`, reference line at 6 months
-- Column chart: `Sensitivity Outcomes Lost` by `FundingShock`
+- Line chart from `fact_sensitivity`: `Sensitivity Runway` by
+  `fact_sensitivity[FundingShock]`, legend `fact_sensitivity[Scenario]`,
+  reference line at 6 months
+- Column chart: `Sensitivity Outcomes Lost` by `fact_sensitivity[FundingShock]`
 - Card: `Max Sustainable Shock`
 
 ### Page 7 - Allocation
 
-- Clustered bar from `fact_allocation`: `Allocation` by program, legend
-  `ObjectiveLabel`
-- Table: objective, `Additional Outcomes`, `Additional Earnings`,
-  `Allocation Avg Gain`, `Outcomes Forgone vs Best`
-- Line chart from `fact_quality_tradeoff`: `Outcomes` by `QualityFloor`
+- Clustered bar from `fact_allocation`: `Total Allocation` by program, legend
+  `fact_allocation[ObjectiveLabel]`
+- Table: `fact_allocation[ObjectiveLabel]`, `Additional Outcomes`,
+  `Additional Earnings`, `Allocation Avg Gain`, `Outcomes Forgone vs Best`
+- Line chart from `fact_quality_tradeoff`: the column
+  `fact_quality_tradeoff[Outcomes]` by `fact_quality_tradeoff[QualityFloor]` -
+  this table is disconnected, so use its own columns, not `[Total Outcomes]`
 
 ## 5. Formatting
 

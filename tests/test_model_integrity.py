@@ -837,3 +837,32 @@ def test_the_verification_query_expects_the_filed_figures(pbi_built):
     prog = list(_csv.DictReader(open(PBI_DATA / "fact_program.csv")))
     outcomes = sum(float(r["Outcomes"]) for r in prog if r["Year"] == "2024")
     assert float(exp["Outcomes"]) == outcomes
+
+
+def test_the_page_specs_only_name_things_that_exist(pbi_built):
+    """
+    Section 4 of the guide tells a reader which field to drag onto which visual.
+    Renaming nine measures to clear the column collisions left that section
+    quoting names the model no longer has - a build guide that is wrong in the
+    one place someone follows it literally.
+
+    Backticked names in the pages section must be a measure, a bare table, or a
+    table[column] that exists. Prose in backticks is not allowed there.
+    """
+    guide = (ROOT / "powerbi" / "BUILD_GUIDE.md").read_text()
+    start = guide.index("## 4. Build the pages")
+    pages = guide[start:guide.index("## 5. Formatting")]
+
+    measures = {n for _, n in _measure_defs()}
+    cols = {p.stem: next(_csv.reader(open(p))) for p in PBI_DATA.glob("*.csv")}
+    qualified = {f"{t}[{c}]" for t, cs in cols.items() for c in cs}
+
+    unknown = []
+    for token in _re.findall(r"`([^`]+)`", pages):
+        if "." in token:            # a filename, not a field
+            continue
+        bare = token[1:-1] if token.startswith("[") and token.endswith("]") else token
+        if bare in measures or bare in cols or bare in qualified:
+            continue
+        unknown.append(token)
+    assert not unknown, f"the page specs name things the model does not have: {sorted(set(unknown))}"
