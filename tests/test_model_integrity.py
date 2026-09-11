@@ -817,3 +817,23 @@ def test_no_variable_is_named_after_a_reserved_word(pbi_built):
         names = _re.findall(r"\bVAR\s+([A-Za-z_][A-Za-z0-9_]*)", path.read_text())
         clashes = sorted({n for n in names if n.lower() in reserved})
         assert not clashes, f"{path.name}: variable named after a reserved word: {clashes}"
+
+
+def test_the_verification_query_expects_the_filed_figures(pbi_built):
+    """
+    verify_model.dax is only worth running if what it expects is right. Its
+    FY2024 revenue, expenses and net assets must be the filed 990 numbers, and
+    its outcome count must be the fact table's - not the engine's continuous
+    1,494.8, which rounds to 1,494 once the programs are split.
+    """
+    text = (ROOT / "powerbi" / "verify_model.dax").read_text()
+    exp = dict(_re.findall(r'"Check", "([^"]+)",\n\s*"Expected", ([0-9.eE+-]+)', text))
+    assert len(exp) == 12, f"expected twelve checks, found {len(exp)}"
+    f24 = I.F990[2024]
+    assert float(exp["Total revenue"]) == f24["total_revenue"]
+    assert float(exp["Total expenses"]) == f24["total_expense"]
+    assert float(exp["Net assets"]) == f24["total_assets"] - f24["total_liab"]
+
+    prog = list(_csv.DictReader(open(PBI_DATA / "fact_program.csv")))
+    outcomes = sum(float(r["Outcomes"]) for r in prog if r["Year"] == "2024")
+    assert float(exp["Outcomes"]) == outcomes

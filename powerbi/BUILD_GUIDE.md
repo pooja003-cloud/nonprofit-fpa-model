@@ -133,6 +133,13 @@ Check group 1 before trusting anything else. Almost every measure downstream is
 built from `[Total Amount]` and the line measures beneath it. `[Total Revenue]`
 should read **$28,580,411** for FY2024 with no scenario filter applied.
 
+Better than checking one measure by eye: open a new query tab and run
+`verify_model.dax`. It returns twelve rows comparing the deployed model against
+the FY2024 figures, with a Difference and an OK / CHECK on each. Twelve OKs
+means the load, the relationships and the base measures are all correct. A whole
+column of wrong numbers points at the relationships; one wrong row points at
+that measure.
+
 Ignore the `_Line` placeholder in `measures.dax`. It documents the pattern the
 line measures use and is not meant to be created; the query-view file omits it.
 

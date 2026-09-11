@@ -1100,6 +1100,102 @@ def write_dax_query():
     return p
 
 
+
+# --------------------------------------------------------------------------
+# A query that checks the deployed model against the filed figures.
+#
+# Everything up to here verifies the files. This verifies the thing Power BI
+# actually built from them - which is not the same claim, as four separate
+# failures in this project demonstrated. It runs in DAX query view against the
+# live semantic model and returns one row per check with the difference.
+# --------------------------------------------------------------------------
+def write_verify_query():
+    """
+    Expected values come from the rows this build actually ships, not from the
+    engine's continuous figures. The two differ slightly by design - outcomes
+    are whole people once rounded per program, so the engine's 1,494.8 is 1,494
+    in the fact table - and a check that quoted the engine would fail against a
+    model that is behaving correctly. Tying the shipped rows back to the filed
+    990 is a separate job, and the test suite already does it.
+    """
+    rows = dict(
+        (name, (header, data)) for name, header, data in TABLES
+    )
+    acc_h, acc_r = rows["dim_account"]
+    line_of = {r[acc_h.index("AccountKey")]: r[acc_h.index("LineItem")] for r in acc_r}
+    fin_h, fin_r = rows["fact_financials"]
+    fin = {}
+    for r in fin_r:
+        if str(r[fin_h.index("Year")]) == "2024":
+            fin[line_of[r[fin_h.index("AccountKey")]]] = float(r[fin_h.index("Amount")])
+    pg_h, pg_r = rows["fact_program"]
+    pg = {c: sum(float(r[pg_h.index(c)]) for r in pg_r
+                 if str(r[pg_h.index("Year")]) == "2024")
+          for c in ("Participants", "Outcomes", "ProgramCost")}
+
+    expenses = fin["Total expenses"]
+    checks = [
+        ("Total revenue",          "Total Revenue",          fin["Total revenue"]),
+        ("Total expenses",         "Total Expenses",         expenses),
+        ("Operating result",       "Operating Result",       fin["Total revenue"] - expenses),
+        ("Program expense ratio",  "Program Expense Ratio",  fin["Program services"] / expenses),
+        ("Administrative ratio",   "Administrative Ratio",   fin["Management and general"] / expenses),
+        ("Fundraising cost ratio", "Fundraising Cost Ratio", fin["Fundraising"] / fin["Contributions and grants"]),
+        ("Net assets",             "Net Assets",             fin["Net assets"]),
+        ("Net asset multiple",     "Net Asset Multiple",     fin["Net assets"] / expenses),
+        ("Liquid runway months",   "Liquid Runway Months",   fin["Liquid reserves"] / (expenses / 12)),
+        ("Participants",           "Total Participants",     pg["Participants"]),
+        ("Outcomes",               "Total Outcomes",         pg["Outcomes"]),
+        ("Cost per outcome",       "Cost per Outcome",       pg["ProgramCost"] / pg["Outcomes"]),
+    ]
+
+    out = [
+        "// =====================================================================",
+        "// Nonprofit Financial Planning - model verification query",
+        "//",
+        "// Run this in DAX query view once the measures are created. It checks",
+        "// the deployed semantic model against the FY2024 figures and returns",
+        "// one row per check.",
+        "//",
+        "// Every row should read OK and every Difference should be 0. A whole",
+        "// column of wrong numbers points at the relationships; a single wrong",
+        "// row points at that measure.",
+        "//",
+        "// FY2024 is an actual, so it carries one scenario and needs no scenario",
+        "// filter. Forecast years hold Downside, Base and Upside side by side, so",
+        "// a visual spanning those years without a scenario slicer sums all three",
+        "// and reads about three times too high. That is the model working as",
+        "// designed, not a defect - but it is the first thing to suspect when a",
+        "// forecast number looks implausible.",
+        "// =====================================================================",
+        "",
+        "EVALUATE",
+        "VAR Yr = 2024",
+        "VAR Tol = 0.000001",
+    ]
+    for i, (_l, measure, _e) in enumerate(checks):
+        out.append(f"VAR v{i} = CALCULATE ( [{measure}], dim_year[Year] = Yr )")
+    out += ["RETURN", "    UNION ("]
+    blocks = []
+    for i, (label, _m, exp) in enumerate(checks):
+        e = repr(float(exp))
+        blocks.append(
+            "        ROW (\n"
+            f'            "Check", "{label}",\n'
+            f'            "Expected", {e},\n'
+            f'            "Power BI", v{i},\n'
+            f'            "Difference", v{i} - {e},\n'
+            f'            "Status", IF ( ABS ( v{i} - {e} ) <= Tol * ABS ( {e} ) + 0.005, "OK", "CHECK" )\n'
+            "        )"
+        )
+    out.append(",\n".join(blocks))
+    out += ["    )", ""]
+    ROOT.mkdir(parents=True, exist_ok=True)
+    path = ROOT / "verify_model.dax"
+    path.write_text("\n".join(out), encoding="utf-8")
+    print(f"  {'verify_model.dax':<32} {len(checks):>5} checks")
+    return path
+
 # ==========================================================================
 def write_build_guide():
     nm = len(_parse_measures(DAX))
@@ -1239,6 +1335,13 @@ name. Renaming one back will fail on create.
 Check group 1 before trusting anything else. Almost every measure downstream is
 built from `[Total Amount]` and the line measures beneath it. `[Total Revenue]`
 should read **$28,580,411** for FY2024 with no scenario filter applied.
+
+Better than checking one measure by eye: open a new query tab and run
+`verify_model.dax`. It returns twelve rows comparing the deployed model against
+the FY2024 figures, with a Difference and an OK / CHECK on each. Twelve OKs
+means the load, the relationships and the base measures are all correct. A whole
+column of wrong numbers points at the relationships; one wrong row points at
+that measure.
 
 Ignore the `_Line` placeholder in `measures.dax`. It documents the pattern the
 line measures use and is not meant to be created; the query-view file omits it.
@@ -1421,6 +1524,7 @@ def build():
     write_workbook()
     write_dax()
     write_dax_query()
+    write_verify_query()
     write_build_guide()
     print(f"wrote {ROOT}")
     return ROOT
