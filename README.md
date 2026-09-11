@@ -89,7 +89,7 @@ one before.
 |---|---|
 | `reports/Management_Report.pdf` | Seven-page management report answering the six recommendation questions. |
 | `reports/Executive_Summary.pdf` | Two-page summary for a board or hiring manager. |
-| `powerbi/` | A validated star schema (7 dimensions, 9 fact tables), a 103-measure DAX library, and a page-by-page build guide. `PowerBI_Data_Model.xlsx` holds all sixteen tables in one workbook for importing in the browser; the CSVs in `powerbi/data/` are the same data for Power BI Desktop's folder connector. |
+| `powerbi/` | A validated star schema (7 dimensions, 9 fact tables), a 98-measure DAX library, and a page-by-page build guide. `PowerBI_Data_Model.xlsx` holds all sixteen tables in one workbook for importing in the browser; the CSVs in `powerbi/data/` are the same data for Power BI Desktop's folder connector. |
 | `data/` | Raw Form 990 extracts, published impact metrics, sector benchmarks, and processed analysis outputs as CSV. `SOURCES.md` records every source and — importantly — what could not be obtained. |
 | `src/`, `tests/` | The build and verification harness. See [Repository layout](#repository-layout). |
 
@@ -155,13 +155,13 @@ discrepancy was found by a reconciliation check, not by reading the form.
 
 ## Verification
 
-131 automated tests. Every workbook is recalculated headlessly with LibreOffice —
+139 automated tests. Every workbook is recalculated headlessly with LibreOffice —
 which forces evaluation of formulas `openpyxl` writes but never computes — and
 the results are checked against an independent Python implementation of the same
 model.
 
 ```bash
-python -m pytest tests -q     # 131 passed
+python -m pytest tests -q     # 139 passed
 ```
 
 The tests confirm: no formula errors in any workbook; Excel and Python agree to 1
@@ -180,7 +180,7 @@ one implementation being self-consistent.
 ```bash
 pip install -r requirements.txt
 python src/build_all.py       # rebuilds every deliverable from source (~1s)
-python -m pytest tests -q     # 131 tests verify them
+python -m pytest tests -q     # 139 tests verify them
 ```
 
 Requires LibreOffice for the verification step (`soffice` on PATH). The build

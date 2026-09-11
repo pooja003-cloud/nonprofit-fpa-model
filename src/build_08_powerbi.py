@@ -96,7 +96,8 @@ def write_workbook():
         ("How to use it", "Power BI: Get data > Excel workbook > Import. In the Navigator tick "
                           "the sixteen TABLES listed below - not the sheets they sit on, and "
                           "not this sheet. The table names are what the DAX measures expect."),
-        ("Then", "Build the relationships and paste the measures from measures.dax. "
+        ("Then", "Build the relationships, then add the measures - measures_dax_query.dax "
+                 "in the browser, measures.dax in Desktop. "
                  "Both steps are in BUILD_GUIDE.md - relationships are NOT carried over "
                  "by the import and must be created by hand."),
         ("", ""),
@@ -513,7 +514,7 @@ DAX = r"""// ===================================================================
 // 1. Base amount selectors
 // ---------------------------------------------------------------------
 
-Amount =
+Total Amount =
 SUM ( fact_financials[Amount] )
 
 _Line =
@@ -522,40 +523,40 @@ _Line =
 BLANK ()
 
 Total Revenue =
-CALCULATE ( [Amount], dim_account[LineItem] = "Total revenue" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Total revenue" )
 
 Total Expenses =
-CALCULATE ( [Amount], dim_account[LineItem] = "Total expenses" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Total expenses" )
 
 Contributions =
-CALCULATE ( [Amount], dim_account[LineItem] = "Contributions and grants" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Contributions and grants" )
 
 Program Service Revenue =
-CALCULATE ( [Amount], dim_account[LineItem] = "Program service revenue" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Program service revenue" )
 
 Investment Income =
-CALCULATE ( [Amount], dim_account[LineItem] = "Investment and other income" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Investment and other income" )
 
 Program Expense =
-CALCULATE ( [Amount], dim_account[LineItem] = "Program services" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Program services" )
 
 Management and General =
-CALCULATE ( [Amount], dim_account[LineItem] = "Management and general" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Management and general" )
 
 Fundraising Expense =
-CALCULATE ( [Amount], dim_account[LineItem] = "Fundraising" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Fundraising" )
 
 Personnel Cost =
-CALCULATE ( [Amount], dim_account[LineItem] = "Personnel" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Personnel" )
 
 Net Assets =
-CALCULATE ( [Amount], dim_account[LineItem] = "Net assets" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Net assets" )
 
 Liquid Reserves =
-CALCULATE ( [Amount], dim_account[LineItem] = "Liquid reserves" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Liquid reserves" )
 
 Cash =
-CALCULATE ( [Amount], dim_account[LineItem] = "Cash and equivalents" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Cash and equivalents" )
 
 Operating Result =
 [Total Revenue] - [Total Expenses]
@@ -620,7 +621,10 @@ IF ( [Liquid Runway Months] < 6, 1, 0 )
 // ---------------------------------------------------------------------
 
 Revenue PY =
-CALCULATE ( [Total Revenue], DATEADD ( dim_year[Year], -1, YEAR ) )
+// dim_year[Year] is a whole number and dim_year is not a marked date table, so
+// the time-intelligence functions do not apply. Offsetting the key by one is
+// the equivalent, and is the pattern every prior-year measure below uses.
+CALCULATE ( [Total Revenue], dim_year[Year] = SELECTEDVALUE ( dim_year[Year] ) - 1 )
 
 Revenue Growth =
 VAR Prior =
@@ -673,13 +677,13 @@ CALCULATE (
 // 5. Program economics
 // ---------------------------------------------------------------------
 
-Participants =
+Total Participants =
 SUM ( fact_program[Participants] )
 
-Completers =
+Total Completers =
 SUM ( fact_program[Completers] )
 
-Outcomes =
+Total Outcomes =
 SUM ( fact_program[Outcomes] )
 
 Program Cost =
@@ -692,34 +696,34 @@ Earnings Gain =
 SUM ( fact_program[EarningsGain] )
 
 Completion Rate =
-DIVIDE ( [Completers], [Participants] )
+DIVIDE ( [Total Completers], [Total Participants] )
 
 Outcome Rate =
-DIVIDE ( [Outcomes], [Participants] )
+DIVIDE ( [Total Outcomes], [Total Participants] )
 
 Outcome Rate of Completers =
-DIVIDE ( [Outcomes], [Completers] )
+DIVIDE ( [Total Outcomes], [Total Completers] )
 
 Cost per Participant =
-DIVIDE ( [Program Cost], [Participants] )
+DIVIDE ( [Program Cost], [Total Participants] )
 
 Cost per Completer =
-DIVIDE ( [Program Cost], [Completers] )
+DIVIDE ( [Program Cost], [Total Completers] )
 
 Cost per Outcome =
-DIVIDE ( [Program Cost], [Outcomes] )
+DIVIDE ( [Program Cost], [Total Outcomes] )
 
 Staff Hours per Outcome =
-DIVIDE ( [Staff Hours], [Outcomes] )
+DIVIDE ( [Staff Hours], [Total Outcomes] )
 
 Earnings Gain per Dollar =
 DIVIDE ( [Earnings Gain], [Program Cost] )
 
 Average Gain per Outcome =
-DIVIDE ( [Earnings Gain], [Outcomes] )
+DIVIDE ( [Earnings Gain], [Total Outcomes] )
 
 Capacity Utilisation =
-DIVIDE ( [Participants], SUM ( dim_program[MaxParticipants] ) )
+DIVIDE ( [Total Participants], SUM ( dim_program[MaxParticipants] ) )
 
 Indirect Cost Share =
 DIVIDE ( SUM ( fact_program[IndirectCost] ), [Program Cost] )
@@ -732,17 +736,17 @@ RANKX ( ALLSELECTED ( dim_program[Program] ), [Cost per Outcome], , ASC, DENSE )
 // 6. Budget versus actual
 // ---------------------------------------------------------------------
 
-Budget =
+Total Budget =
 SUM ( fact_budget_variance[Budget] )
 
-Actual =
+Total Actual =
 SUM ( fact_budget_variance[Actual] )
 
-Variance =
-[Actual] - [Budget]
+Total Variance =
+[Total Actual] - [Total Budget]
 
 Variance Pct =
-DIVIDE ( [Variance], ABS ( [Budget] ) )
+DIVIDE ( [Total Variance], ABS ( [Total Budget] ) )
 
 Variance Direction =
 // Expense lines are favourable when actual comes in below budget.
@@ -750,10 +754,10 @@ VAR IsExpense = SELECTEDVALUE ( dim_account[IsExpense] )
 RETURN
     SWITCH (
         TRUE (),
-        [Variance] = 0, "On plan",
-        IsExpense = 1 && [Variance] < 0, "Favourable",
-        IsExpense = 1 && [Variance] > 0, "Unfavourable",
-        [Variance] > 0, "Favourable",
+        [Total Variance] = 0, "On plan",
+        IsExpense = 1 && [Total Variance] < 0, "Favourable",
+        IsExpense = 1 && [Total Variance] > 0, "Unfavourable",
+        [Total Variance] > 0, "Favourable",
         "Unfavourable"
     )
 
@@ -761,7 +765,7 @@ Variance Colour =
 SWITCH ( [Variance Direction], "Favourable", "#1B5E20", "Unfavourable", "#B71C1C", "#5F6B7A" )
 
 Absolute Variance =
-ABS ( [Variance] )
+ABS ( [Total Variance] )
 
 
 // ---------------------------------------------------------------------
@@ -771,11 +775,11 @@ ABS ( [Variance] )
 Funding Amount =
 SUM ( fact_funding[Amount] )
 
-Donors =
+Total Donors =
 SUM ( fact_funding[Donors] )
 
 Average Gift =
-DIVIDE ( [Funding Amount], [Donors] )
+DIVIDE ( [Funding Amount], [Total Donors] )
 
 Funding Share =
 DIVIDE (
@@ -872,7 +876,7 @@ CALCULATE (
 // 10. Resource allocation  (standalone table)
 // ---------------------------------------------------------------------
 
-Allocation =
+Total Allocation =
 SUM ( fact_allocation[Allocation] )
 
 Additional Outcomes =
@@ -885,7 +889,7 @@ Allocation Avg Gain =
 DIVIDE ( [Additional Earnings], [Additional Outcomes] )
 
 Allocation Cost per Outcome =
-DIVIDE ( [Allocation], [Additional Outcomes] )
+DIVIDE ( [Total Allocation], [Additional Outcomes] )
 
 Outcomes Forgone vs Best =
 VAR Best =
@@ -967,14 +971,134 @@ def write_dax():
     ROOT.mkdir(parents=True, exist_ok=True)
     p = ROOT / "measures.dax"
     p.write_text(DAX, encoding="utf-8")
-    import re
-    n = len(re.findall(r"^([A-Za-z][A-Za-z0-9 _]*) =$", DAX, re.M))
+    n = len(_parse_measures(DAX))
     print(f"  {'measures.dax':<32} {n:>5} measures")
+    return p
+
+
+# --------------------------------------------------------------------------
+# The same library in DAX query view form.
+#
+# Power BI Desktop's New measure box takes one definition at a time, which is
+# what measures.dax is shaped for. The browser has no Tabular Editor, and a
+# hundred measures pasted one at a time is an hour of clicking. DAX query view
+# (in the Service: open the semantic model > Write DAX queries) accepts a DEFINE
+# block and offers an "Update model: Add new measures" action that creates all
+# of them at once.
+#
+# Home tables are cosmetic - they decide only where a measure sits in the Data
+# pane. They are resolved to the fact table a measure actually reads, following
+# measure-to-measure references where the body names no table itself.
+# --------------------------------------------------------------------------
+# Column-0 tokens that open a statement inside a measure body rather than
+# starting a new measure.
+DAX_KEYWORDS = ("VAR ", "RETURN", "EVALUATE", "DEFINE", "MEASURE ", "COLUMN ",
+                "TABLE ", "ORDER ")
+
+FACT_TABLES = [
+    "fact_financials", "fact_program", "fact_funding", "fact_budget_variance",
+    "fact_allocation", "fact_sensitivity", "fact_quality_tradeoff",
+    "fact_provenance",
+]
+
+
+def _parse_measures(text: str) -> list[tuple[str, list[str]]]:
+    """Split the library into (name, body-lines). Skips the _Line placeholder."""
+    import re
+    lines = text.splitlines()
+    hdr = re.compile(r"^([A-Za-z_][A-Za-z0-9 _%\-.()/&]*?)\s*=\s*$")
+    # A measure header is a bare "Name =" in column 0. So is the "VAR Thing ="
+    # of a multi-statement measure, which is why the keywords are excluded -
+    # without this, a measure using VAR is silently split in two and the half
+    # after the VAR becomes a measure named "VAR Thing".
+    heads = [(i, m.group(1)) for i, ln in enumerate(lines)
+             if (m := hdr.match(ln)) and not ln.startswith(DAX_KEYWORDS)]
+    out = []
+    for k, (i, name) in enumerate(heads):
+        end = heads[k + 1][0] if k + 1 < len(heads) else len(lines)
+        body = lines[i + 1:end]
+        # Trailing blanks and the next group's comment banner belong to neither.
+        while body and (not body[-1].strip() or body[-1].lstrip().startswith("//")):
+            body.pop()
+        if name != "_Line":
+            out.append((name, body))
+    return out
+
+
+def _home_tables(items: list[tuple[str, list[str]]]) -> dict[str, str]:
+    """Resolve each measure to the fact table it reads.
+
+    A measure that names a fact table directly is settled. One that only calls
+    other measures inherits from them, so [Total Revenue] - which filters
+    dim_account but sums through [Total Amount] - lands on fact_financials
+    rather than on the dimension it happens to mention.
+    """
+    import re
+    from collections import Counter
+    names = {n for n, _ in items}
+    home: dict[str, str] = {}
+    pending = []
+    for name, body in items:
+        txt = "\n".join(body)
+        direct = next((t for t in FACT_TABLES if t in txt), None)
+        if direct:
+            home[name] = direct
+        else:
+            pending.append((name, [r for r in re.findall(r"\[([^\]]+)\]", txt)
+                                   if r in names and r != name]))
+    for _ in range(len(pending) + 1):
+        if not any(n not in home for n, _ in pending):
+            break
+        for name, refs in pending:
+            if name in home:
+                continue
+            known = [home[r] for r in refs if r in home]
+            if known:
+                home[name] = Counter(known).most_common(1)[0][0]
+    for name, _ in items:
+        home.setdefault(name, "fact_financials")
+    return home
+
+
+def write_dax_query():
+    items = _parse_measures(DAX)
+    home = _home_tables(items)
+    out = [
+        "// =====================================================================",
+        "// Nonprofit Financial Planning - DAX measure library, query view form",
+        "//",
+        "// For the Power BI Service in a browser. Open the semantic model, choose",
+        "// Write DAX queries, paste this whole file, then click the",
+        "// 'Update model: Add new measures' link that appears above DEFINE.",
+        f"// All {len(items)} measures are created in one action.",
+        "//",
+        "// The home table on each MEASURE line is cosmetic - it decides where the",
+        "// measure appears in the Data pane. Measures evaluate model-wide.",
+        "//",
+        "// Create the twelve relationships first. Many of these filter on",
+        "// dimension columns and return errors until the model is wired.",
+        "//",
+        "// measures.dax holds the same library in the one-at-a-time paste form",
+        "// that Power BI Desktop's New measure box expects.",
+        "// =====================================================================",
+        "",
+        "DEFINE",
+    ]
+    for name, body in items:
+        out.append(f"    MEASURE '{home[name]}'[{name}] =")
+        out.extend(("        " + b) if b.strip() else "" for b in body)
+        out.append("")
+    out += ["EVALUATE", f'    ROW ( "Measures added", {len(items)} )', ""]
+    ROOT.mkdir(parents=True, exist_ok=True)
+    p = ROOT / "measures_dax_query.dax"
+    p.write_text("\n".join(out), encoding="utf-8")
+    print(f"  {'measures_dax_query.dax':<32} {len(items):>5} measures")
     return p
 
 
 # ==========================================================================
 def write_build_guide():
+    nm = len(_parse_measures(DAX))
     hist = engine.historical()["rows"]
     h24 = hist[2024]
     guide = f"""# Power BI build guide
@@ -982,7 +1106,7 @@ def write_build_guide():
 A `.pbix` file is a proprietary binary and cannot be generated programmatically,
 so this folder contains everything that goes inside one: the data model, the
 measures, and the assembly spec. Importing the workbook, wiring the twelve
-relationships and pasting `measures.dax` reproduces the dashboard.
+relationships and adding the measures reproduces the dashboard.
 
 Power BI Desktop is Windows-only, so on macOS the route is the Power BI service
 in a browser at app.powerbi.com. Everything below can be done there. Import
@@ -1085,19 +1209,35 @@ and the statement lines come out in the wrong order.
 
 ## 3. Add the measures
 
-Paste from `measures.dax` — twelve groups, 103 measures.
+{nm} measures in twelve groups, supplied in two forms. Use the one that matches
+where you are building.
 
-In the browser: open the data model, select a table, then **New measure**, and
-paste one definition at a time (the name above the `=`, the expression below).
-Tabular Editor can import the file wholesale, but it is Windows-only.
+**In the browser — `measures_dax_query.dax`, all at once.** Open the semantic
+model, choose **Write DAX queries**, paste the whole file, and click the
+**Update model: Add new measures** link that appears above `DEFINE`. Every
+measure is created in one action. This is the only sane route in the Service:
+the web modelling canvas has a **New measure** button but no bulk import, and
+{nm} definitions pasted one at a time is an hour of clicking.
 
-Start with group 1. Almost every other measure is built from `[Amount]` and the
-line measures beneath it, so if those are wrong everything downstream is too.
-`[Total Revenue]` should read **$28,580,411** for FY2024 with no scenario filter
-applied — check that one before typing the other 102.
+**In Power BI Desktop — `measures.dax`, one at a time.** Create a blank measure
+and paste a definition (the name above the `=`, the expression below). Tabular
+Editor imports the file wholesale, but it is Windows-only.
 
-Ignore the `_Line` placeholder. It documents the pattern the line measures use
-and is not meant to be created.
+The two files hold the same library. The query-view form adds a home table to
+each definition, which decides only where the measure sits in the Data pane;
+measures evaluate across the whole model regardless of where they live.
+
+Nine measures carry a `Total ` prefix — `[Total Amount]`, `[Total Participants]`,
+`[Total Budget]` and so on — because a measure may not share its name with a
+column in the same table, and each of those aggregates a column of the bare
+name. Renaming one back will fail on create.
+
+Check group 1 before trusting anything else. Almost every measure downstream is
+built from `[Total Amount]` and the line measures beneath it. `[Total Revenue]`
+should read **$28,580,411** for FY2024 with no scenario filter applied.
+
+Ignore the `_Line` placeholder in `measures.dax`. It documents the pattern the
+line measures use and is not meant to be created; the query-view file omits it.
 
 Changes to a model edited in the browser save automatically with no undo, so if
 something goes badly wrong use the semantic model's version history rather than
@@ -1276,6 +1416,7 @@ def build():
     fact_provenance_summary()
     write_workbook()
     write_dax()
+    write_dax_query()
     write_build_guide()
     print(f"wrote {ROOT}")
     return ROOT

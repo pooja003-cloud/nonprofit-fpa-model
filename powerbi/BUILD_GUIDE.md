@@ -3,7 +3,7 @@
 A `.pbix` file is a proprietary binary and cannot be generated programmatically,
 so this folder contains everything that goes inside one: the data model, the
 measures, and the assembly spec. Importing the workbook, wiring the twelve
-relationships and pasting `measures.dax` reproduces the dashboard.
+relationships and adding the measures reproduces the dashboard.
 
 Power BI Desktop is Windows-only, so on macOS the route is the Power BI service
 in a browser at app.powerbi.com. Everything below can be done there. Import
@@ -106,19 +106,35 @@ and the statement lines come out in the wrong order.
 
 ## 3. Add the measures
 
-Paste from `measures.dax` — twelve groups, 103 measures.
+98 measures in twelve groups, supplied in two forms. Use the one that matches
+where you are building.
 
-In the browser: open the data model, select a table, then **New measure**, and
-paste one definition at a time (the name above the `=`, the expression below).
-Tabular Editor can import the file wholesale, but it is Windows-only.
+**In the browser — `measures_dax_query.dax`, all at once.** Open the semantic
+model, choose **Write DAX queries**, paste the whole file, and click the
+**Update model: Add new measures** link that appears above `DEFINE`. Every
+measure is created in one action. This is the only sane route in the Service:
+the web modelling canvas has a **New measure** button but no bulk import, and
+98 definitions pasted one at a time is an hour of clicking.
 
-Start with group 1. Almost every other measure is built from `[Amount]` and the
-line measures beneath it, so if those are wrong everything downstream is too.
-`[Total Revenue]` should read **$28,580,411** for FY2024 with no scenario filter
-applied — check that one before typing the other 102.
+**In Power BI Desktop — `measures.dax`, one at a time.** Create a blank measure
+and paste a definition (the name above the `=`, the expression below). Tabular
+Editor imports the file wholesale, but it is Windows-only.
 
-Ignore the `_Line` placeholder. It documents the pattern the line measures use
-and is not meant to be created.
+The two files hold the same library. The query-view form adds a home table to
+each definition, which decides only where the measure sits in the Data pane;
+measures evaluate across the whole model regardless of where they live.
+
+Nine measures carry a `Total ` prefix — `[Total Amount]`, `[Total Participants]`,
+`[Total Budget]` and so on — because a measure may not share its name with a
+column in the same table, and each of those aggregates a column of the bare
+name. Renaming one back will fail on create.
+
+Check group 1 before trusting anything else. Almost every measure downstream is
+built from `[Total Amount]` and the line measures beneath it. `[Total Revenue]`
+should read **$28,580,411** for FY2024 with no scenario filter applied.
+
+Ignore the `_Line` placeholder in `measures.dax`. It documents the pattern the
+line measures use and is not meant to be created; the query-view file omits it.
 
 Changes to a model edited in the browser save automatically with no undo, so if
 something goes badly wrong use the semantic model's version history rather than

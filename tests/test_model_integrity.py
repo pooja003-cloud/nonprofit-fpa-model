@@ -573,6 +573,7 @@ def test_benchmarks_cite_a_named_standard():
 # ==========================================================================
 
 import csv as _csv           # noqa: E402
+import re as _re             # noqa: E402
 import math as _math         # noqa: E402
 import zipfile               # noqa: E402
 
@@ -682,3 +683,119 @@ def test_powerbi_numeric_columns_are_not_text(pbi_built):
     assert any(v is None for v in col), "expected some blanks in this column"
     assert all(v is None or isinstance(v, (int, float)) for v in col), \
         "missing values were written as empty strings rather than blanks"
+
+
+# ==========================================================================
+# 13. The DAX library can actually be created
+#
+# A measure library is only a text file until Power BI accepts it, and the ways
+# it gets refused are all invisible to a reader. A measure may not share its
+# name with a column of its home table; names must be unique across the model;
+# a "VAR x =" sitting in column 0 looks exactly like the start of a new measure
+# to anything parsing the file by eye or by regex; and time-intelligence
+# functions need a marked date table, which this model does not have because
+# its year key is a whole number.
+#
+# Every one of those was present in the library at some point and none of them
+# showed up as a wrong number - they showed up as a create that failed.
+# ==========================================================================
+
+PBI_DAX = ROOT / "powerbi" / "measures.dax"
+PBI_DAX_QUERY = ROOT / "powerbi" / "measures_dax_query.dax"
+
+
+def _measure_defs():
+    """(home table, name) for every measure in the query-view file."""
+    return _re.findall(r"MEASURE '([^']+)'\[([^\]]+)\]", PBI_DAX_QUERY.read_text())
+
+
+def test_both_dax_files_hold_the_same_library(pbi_built):
+    import build_08_powerbi as B
+    paste = {n for n, _ in B._parse_measures(PBI_DAX.read_text())}
+    query = {n for _, n in _measure_defs()}
+    assert paste == query, (
+        "the two forms of the library disagree: "
+        f"only in measures.dax {sorted(paste - query)}, "
+        f"only in the query form {sorted(query - paste)}"
+    )
+    assert len(paste) > 90
+
+
+def test_measure_names_are_unique(pbi_built):
+    names = [n for _, n in _measure_defs()]
+    dupes = sorted({n for n in names if names.count(n) > 1})
+    assert not dupes, f"a model cannot hold two measures with one name: {dupes}"
+
+
+def test_no_measure_shares_a_name_with_a_column_of_its_home_table(pbi_built):
+    """
+    Tabular forbids it, and the create fails outright. Nine measures here
+    aggregate a column of the same name, which is why they carry a Total prefix.
+    """
+    cols = {p.stem: next(_csv.reader(open(p))) for p in PBI_DATA.glob("*.csv")}
+    clashes = [(t, n) for t, n in _measure_defs() if n in cols.get(t, [])]
+    assert not clashes, f"measure name collides with a column of its table: {clashes}"
+
+
+def test_no_measure_is_named_after_a_dax_keyword(pbi_built):
+    """
+    "VAR Prior =" in column 0 is a statement inside a measure, not a new
+    measure. A parser that misses the distinction splits the measure in two and
+    the remainder becomes a measure called "VAR Prior" - which then appears
+    three times, because three measures use that variable name.
+    """
+    import build_08_powerbi as B
+    bad = [n for _, n in _measure_defs() if n.startswith(B.DAX_KEYWORDS)]
+    assert not bad, f"a DAX statement was parsed as a measure name: {bad}"
+
+
+def test_every_measure_in_the_query_form_has_a_body(pbi_built):
+    text = PBI_DAX_QUERY.read_text()
+    empty = [
+        n for t, n in _measure_defs()
+        if not _re.search(rf"MEASURE '{t}'\[{_re.escape(n)}\] =\n {{8}}\S", text)
+    ]
+    assert not empty, f"measures written with no expression: {empty}"
+
+
+def test_every_measure_reference_resolves(pbi_built):
+    """
+    [Something] in a body must be a measure defined here, a column of some
+    table, or an extension column introduced by ADDCOLUMNS in the same measure.
+    Anything else is a typo that Power BI reports one measure at a time.
+    """
+    text = PBI_DAX_QUERY.read_text()
+    names = {n for _, n in _measure_defs()}
+    cols = {c for p in PBI_DATA.glob("*.csv") for c in next(_csv.reader(open(p)))}
+    extension = set(_re.findall(r'"(@[A-Za-z0-9_]+)"', text))
+    bodies = _re.sub(r"MEASURE '[^']+'\[[^\]]+\] =", "", text)
+    refs = set(_re.findall(r"(?<![A-Za-z0-9_'])\[([^\]]+)\]", bodies))
+    unknown = sorted(refs - names - cols - extension)
+    assert not unknown, f"references that resolve to nothing: {unknown}"
+
+
+def test_no_time_intelligence_without_a_date_table(pbi_built):
+    """
+    dim_year[Year] is a whole number, and the model marks no date table, so
+    DATEADD and its relatives error on create. Prior-year comparisons offset
+    the integer key instead.
+    """
+    forbidden = ("DATEADD", "SAMEPERIODLASTYEAR", "PARALLELPERIOD", "DATESYTD",
+                 "TOTALYTD", "PREVIOUSYEAR", "DATESBETWEEN")
+    for path in (PBI_DAX, PBI_DAX_QUERY):
+        text = path.read_text()
+        used = [f for f in forbidden if f in text]
+        assert not used, f"{path.name} uses {used} but no date table is marked"
+
+
+def test_the_build_guide_quotes_the_real_measure_count(pbi_built):
+    """
+    The guide used to claim 103 because the counting regex also matched the
+    VAR lines. A number in a document nobody recomputes drifts silently.
+    """
+    import build_08_powerbi as B
+    n = len(B._parse_measures(PBI_DAX.read_text()))
+    guide = (ROOT / "powerbi" / "BUILD_GUIDE.md").read_text()
+    assert f"{n} measures in twelve groups" in guide, \
+        f"the guide does not quote the actual count of {n}"
+    assert "103" not in guide, "a stale measure count survives in the guide"

@@ -31,7 +31,7 @@
 // 1. Base amount selectors
 // ---------------------------------------------------------------------
 
-Amount =
+Total Amount =
 SUM ( fact_financials[Amount] )
 
 _Line =
@@ -40,40 +40,40 @@ _Line =
 BLANK ()
 
 Total Revenue =
-CALCULATE ( [Amount], dim_account[LineItem] = "Total revenue" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Total revenue" )
 
 Total Expenses =
-CALCULATE ( [Amount], dim_account[LineItem] = "Total expenses" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Total expenses" )
 
 Contributions =
-CALCULATE ( [Amount], dim_account[LineItem] = "Contributions and grants" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Contributions and grants" )
 
 Program Service Revenue =
-CALCULATE ( [Amount], dim_account[LineItem] = "Program service revenue" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Program service revenue" )
 
 Investment Income =
-CALCULATE ( [Amount], dim_account[LineItem] = "Investment and other income" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Investment and other income" )
 
 Program Expense =
-CALCULATE ( [Amount], dim_account[LineItem] = "Program services" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Program services" )
 
 Management and General =
-CALCULATE ( [Amount], dim_account[LineItem] = "Management and general" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Management and general" )
 
 Fundraising Expense =
-CALCULATE ( [Amount], dim_account[LineItem] = "Fundraising" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Fundraising" )
 
 Personnel Cost =
-CALCULATE ( [Amount], dim_account[LineItem] = "Personnel" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Personnel" )
 
 Net Assets =
-CALCULATE ( [Amount], dim_account[LineItem] = "Net assets" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Net assets" )
 
 Liquid Reserves =
-CALCULATE ( [Amount], dim_account[LineItem] = "Liquid reserves" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Liquid reserves" )
 
 Cash =
-CALCULATE ( [Amount], dim_account[LineItem] = "Cash and equivalents" )
+CALCULATE ( [Total Amount], dim_account[LineItem] = "Cash and equivalents" )
 
 Operating Result =
 [Total Revenue] - [Total Expenses]
@@ -138,7 +138,10 @@ IF ( [Liquid Runway Months] < 6, 1, 0 )
 // ---------------------------------------------------------------------
 
 Revenue PY =
-CALCULATE ( [Total Revenue], DATEADD ( dim_year[Year], -1, YEAR ) )
+// dim_year[Year] is a whole number and dim_year is not a marked date table, so
+// the time-intelligence functions do not apply. Offsetting the key by one is
+// the equivalent, and is the pattern every prior-year measure below uses.
+CALCULATE ( [Total Revenue], dim_year[Year] = SELECTEDVALUE ( dim_year[Year] ) - 1 )
 
 Revenue Growth =
 VAR Prior =
@@ -191,13 +194,13 @@ CALCULATE (
 // 5. Program economics
 // ---------------------------------------------------------------------
 
-Participants =
+Total Participants =
 SUM ( fact_program[Participants] )
 
-Completers =
+Total Completers =
 SUM ( fact_program[Completers] )
 
-Outcomes =
+Total Outcomes =
 SUM ( fact_program[Outcomes] )
 
 Program Cost =
@@ -210,34 +213,34 @@ Earnings Gain =
 SUM ( fact_program[EarningsGain] )
 
 Completion Rate =
-DIVIDE ( [Completers], [Participants] )
+DIVIDE ( [Total Completers], [Total Participants] )
 
 Outcome Rate =
-DIVIDE ( [Outcomes], [Participants] )
+DIVIDE ( [Total Outcomes], [Total Participants] )
 
 Outcome Rate of Completers =
-DIVIDE ( [Outcomes], [Completers] )
+DIVIDE ( [Total Outcomes], [Total Completers] )
 
 Cost per Participant =
-DIVIDE ( [Program Cost], [Participants] )
+DIVIDE ( [Program Cost], [Total Participants] )
 
 Cost per Completer =
-DIVIDE ( [Program Cost], [Completers] )
+DIVIDE ( [Program Cost], [Total Completers] )
 
 Cost per Outcome =
-DIVIDE ( [Program Cost], [Outcomes] )
+DIVIDE ( [Program Cost], [Total Outcomes] )
 
 Staff Hours per Outcome =
-DIVIDE ( [Staff Hours], [Outcomes] )
+DIVIDE ( [Staff Hours], [Total Outcomes] )
 
 Earnings Gain per Dollar =
 DIVIDE ( [Earnings Gain], [Program Cost] )
 
 Average Gain per Outcome =
-DIVIDE ( [Earnings Gain], [Outcomes] )
+DIVIDE ( [Earnings Gain], [Total Outcomes] )
 
 Capacity Utilisation =
-DIVIDE ( [Participants], SUM ( dim_program[MaxParticipants] ) )
+DIVIDE ( [Total Participants], SUM ( dim_program[MaxParticipants] ) )
 
 Indirect Cost Share =
 DIVIDE ( SUM ( fact_program[IndirectCost] ), [Program Cost] )
@@ -250,17 +253,17 @@ RANKX ( ALLSELECTED ( dim_program[Program] ), [Cost per Outcome], , ASC, DENSE )
 // 6. Budget versus actual
 // ---------------------------------------------------------------------
 
-Budget =
+Total Budget =
 SUM ( fact_budget_variance[Budget] )
 
-Actual =
+Total Actual =
 SUM ( fact_budget_variance[Actual] )
 
-Variance =
-[Actual] - [Budget]
+Total Variance =
+[Total Actual] - [Total Budget]
 
 Variance Pct =
-DIVIDE ( [Variance], ABS ( [Budget] ) )
+DIVIDE ( [Total Variance], ABS ( [Total Budget] ) )
 
 Variance Direction =
 // Expense lines are favourable when actual comes in below budget.
@@ -268,10 +271,10 @@ VAR IsExpense = SELECTEDVALUE ( dim_account[IsExpense] )
 RETURN
     SWITCH (
         TRUE (),
-        [Variance] = 0, "On plan",
-        IsExpense = 1 && [Variance] < 0, "Favourable",
-        IsExpense = 1 && [Variance] > 0, "Unfavourable",
-        [Variance] > 0, "Favourable",
+        [Total Variance] = 0, "On plan",
+        IsExpense = 1 && [Total Variance] < 0, "Favourable",
+        IsExpense = 1 && [Total Variance] > 0, "Unfavourable",
+        [Total Variance] > 0, "Favourable",
         "Unfavourable"
     )
 
@@ -279,7 +282,7 @@ Variance Colour =
 SWITCH ( [Variance Direction], "Favourable", "#1B5E20", "Unfavourable", "#B71C1C", "#5F6B7A" )
 
 Absolute Variance =
-ABS ( [Variance] )
+ABS ( [Total Variance] )
 
 
 // ---------------------------------------------------------------------
@@ -289,11 +292,11 @@ ABS ( [Variance] )
 Funding Amount =
 SUM ( fact_funding[Amount] )
 
-Donors =
+Total Donors =
 SUM ( fact_funding[Donors] )
 
 Average Gift =
-DIVIDE ( [Funding Amount], [Donors] )
+DIVIDE ( [Funding Amount], [Total Donors] )
 
 Funding Share =
 DIVIDE (
@@ -390,7 +393,7 @@ CALCULATE (
 // 10. Resource allocation  (standalone table)
 // ---------------------------------------------------------------------
 
-Allocation =
+Total Allocation =
 SUM ( fact_allocation[Allocation] )
 
 Additional Outcomes =
@@ -403,7 +406,7 @@ Allocation Avg Gain =
 DIVIDE ( [Additional Earnings], [Additional Outcomes] )
 
 Allocation Cost per Outcome =
-DIVIDE ( [Allocation], [Additional Outcomes] )
+DIVIDE ( [Total Allocation], [Additional Outcomes] )
 
 Outcomes Forgone vs Best =
 VAR Best =
