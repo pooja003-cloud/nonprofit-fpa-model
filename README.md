@@ -89,7 +89,7 @@ one before.
 |---|---|
 | `reports/Management_Report.pdf` | Seven-page management report answering the six recommendation questions. |
 | `reports/Executive_Summary.pdf` | Two-page summary for a board or hiring manager. |
-| `powerbi/` | A validated star schema (7 dimensions, 9 fact tables), a 103-measure DAX library, and a page-by-page build guide. |
+| `powerbi/` | A validated star schema (7 dimensions, 9 fact tables), a 103-measure DAX library, and a page-by-page build guide. `PowerBI_Data_Model.xlsx` holds all sixteen tables in one workbook for importing in the browser; the CSVs in `powerbi/data/` are the same data for Power BI Desktop's folder connector. |
 | `data/` | Raw Form 990 extracts, published impact metrics, sector benchmarks, and processed analysis outputs as CSV. `SOURCES.md` records every source and — importantly — what could not be obtained. |
 | `src/`, `tests/` | The build and verification harness. See [Repository layout](#repository-layout). |
 

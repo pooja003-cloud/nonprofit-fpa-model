@@ -1,19 +1,47 @@
 # Power BI build guide
 
 A `.pbix` file is a proprietary binary and cannot be generated programmatically,
-so this folder contains everything that goes inside one. Loading `data/`, wiring
-the relationships below and pasting `measures.dax` reproduces the dashboard.
+so this folder contains everything that goes inside one: the data model, the
+measures, and the assembly spec. Importing the workbook, wiring the thirteen
+relationships and pasting `measures.dax` reproduces the dashboard.
 
-Power BI Desktop is Windows-only. On macOS the options are Power BI Service
-(app.powerbi.com, which will consume this star schema directly), a Windows VM, or
-Parallels. Nothing in this folder depends on which route is taken.
+Power BI Desktop is Windows-only, so on macOS the route is the Power BI service
+in a browser at app.powerbi.com. Everything below can be done there. Import
+`PowerBI_Data_Model.xlsx`; the sixteen CSVs in `data/` hold identical data and
+are for the Desktop folder connector.
 
 ---
 
 ## 1. Load the data
 
-Get Data > Text/CSV, and load all files from `data/`. Or Get Data > Folder to
-pull the whole directory in one step.
+### In the browser (Power BI service) — recommended on macOS
+
+Use **`PowerBI_Data_Model.xlsx`**. It holds all sixteen tables as named Excel
+Tables, one per sheet, so the whole model imports in a single step. The browser
+imports one file at a time, which is why this workbook exists.
+
+1. Go to app.powerbi.com and open a workspace (My Workspace is fine).
+2. **New > Semantic model**, or **Get data > Files > Local File**.
+3. Choose **Import** — *not* Upload. Upload opens the workbook in Excel Online
+   and gives you nothing to build a report on; Import creates the semantic model
+   you actually need. This is the single most common wrong turn here.
+4. Tick the sixteen tables. Leave `_README` unticked — it is a plain sheet
+   rather than an Excel Table, so it appears under *Sheets* and is easy to skip.
+5. Then go to step 2 below. **The import does not create relationships** — Power
+   BI never infers them from a workbook, so all thirteen must be drawn by hand.
+
+Creating relationships and measures in the browser needs write access to the
+semantic model, which you have on a model you just created in your own
+workspace. If the modelling view is greyed out, the model is being viewed rather
+than edited — open it from the workspace list and choose **Open data model**.
+
+### In Power BI Desktop (Windows only)
+
+Use the CSVs instead: **Get data > Folder**, point at `data/`, and load all
+sixteen in one step. Identical data — the CSVs are kept because they diff
+properly in version control, where a binary `.xlsx` shows only "changed".
+
+### What you are loading
 
 | Table | Grain | Rows |
 |---|---|---|
@@ -34,14 +62,18 @@ pull the whole directory in one step.
 | `fact_quality_tradeoff` | one row per quality floor tested | |
 | `fact_provenance` | one row per tier | 4 |
 
-Set data types explicitly after loading. Power BI will usually infer `Year` as a
-whole number, which is what you want; check that `Amount`, `VariancePct`,
-`Share`, `CapacityRetained` and `FundingShock` come in as decimal numbers rather
-than text.
+Check the data types after loading. `Year` should be a whole number; `Amount`,
+`VariancePct`, `Share`, `CapacityRetained` and `FundingShock` should be decimal
+numbers, not text. The workbook writes genuine numeric cells and leaves missing
+values blank rather than empty strings, precisely so type inference does not
+silently turn a numeric column into text — but it is worth a glance, because
+every measure downstream depends on it.
 
 ## 2. Build the relationships
 
-All single-direction, many-to-one, from fact to dimension.
+All single-direction, many-to-one, from fact to dimension. In the browser this
+is **Open data model**, then drag the fact column onto the dimension column. In
+Desktop it is the Model view.
 
 ```
 fact_financials[Year]            ->  dim_year[Year]
@@ -74,12 +106,23 @@ and the statement lines come out in the wrong order.
 
 ## 3. Add the measures
 
-Paste from `measures.dax`. Twelve groups, roughly seventy measures. If you use
-Tabular Editor, the file can be imported wholesale; otherwise create a blank
-measure and paste one block at a time.
+Paste from `measures.dax` — twelve groups, 103 measures.
 
-Ignore the `_Line` placeholder - it documents the pattern the line measures use
+In the browser: open the data model, select a table, then **New measure**, and
+paste one definition at a time (the name above the `=`, the expression below).
+Tabular Editor can import the file wholesale, but it is Windows-only.
+
+Start with group 1. Almost every other measure is built from `[Amount]` and the
+line measures beneath it, so if those are wrong everything downstream is too.
+`[Total Revenue]` should read **$28,580,411** for FY2024 with no scenario filter
+applied — check that one before typing the other 102.
+
+Ignore the `_Line` placeholder. It documents the pattern the line measures use
 and is not meant to be created.
+
+Changes to a model edited in the browser save automatically with no undo, so if
+something goes badly wrong use the semantic model's version history rather than
+trying to unpick it by hand.
 
 ## 4. Build the pages
 
