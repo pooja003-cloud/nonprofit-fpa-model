@@ -242,11 +242,16 @@ If you hit it anyway, fall back to the sixteen CSVs in `data/` - same data, and
 CSV has no format to misread. Import them one at a time, or use Power BI
 Desktop's folder connector if you have Windows access.
 
-**The Navigator lists both `dim_year (Sheet)` and `dim_year (Table)`.**
+**The Navigator lists `dim_year1`, `dim_scenario2`, `fact_financials8` …**
 
-Expected. Tick the Table. The sheet and the table deliberately share a name so
-the tables are easy to find; the Table version carries typed columns and a
-defined header row, the Sheet version is the raw grid.
+You are using a workbook generated before this was fixed. Excel permits a sheet
+and a table to share a name, but Power Query then appends the table's id to tell
+them apart - and `dim_year1` breaks every measure written against `dim_year`.
+
+Regenerate the workbook (`python src/build_08_powerbi.py`), or import the
+un-numbered items instead: those are the sheets, and they carry the correct
+names. In the current workbook the sheets are prefixed `01 `, `02 ` and so on,
+so there is no collision and the Tables import under their own names.
 
 **Measures return blank after loading.**
 

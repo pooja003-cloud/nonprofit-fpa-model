@@ -93,8 +93,9 @@ def write_workbook():
         ("What this is", "Every table of the Power BI star schema, one per sheet, as a named "
                          "Excel Table. Import this single file rather than the sixteen CSVs "
                          "in the same folder - they hold identical data."),
-        ("How to use it", "Power BI: Get data > Excel workbook > Import, then tick the sixteen "
-                          "tables listed below. Do not tick this sheet."),
+        ("How to use it", "Power BI: Get data > Excel workbook > Import. In the Navigator tick "
+                          "the sixteen TABLES listed below - not the sheets they sit on, and "
+                          "not this sheet. The table names are what the DAX measures expect."),
         ("Then", "Build the relationships and paste the measures from measures.dax. "
                  "Both steps are in BUILD_GUIDE.md - relationships are NOT carried over "
                  "by the import and must be created by hand."),
@@ -111,15 +112,24 @@ def write_workbook():
             ws.write_string(i, 1, v, body)
             ws.set_row(i, 13 * (len(v) // 92 + 1))
     r = len(lines) + 1
-    ws.write_string(r, 0, "Sheet", key)
+    ws.write_string(r, 0, "Table to import", key)
     ws.write_string(r, 1, "Rows", key)
-    for name, _h, rows in TABLES:
+    ws.write_string(r, 2, "Lives on", key)
+    for idx, (name, _h, rows) in enumerate(TABLES, start=1):
         r += 1
         ws.write_string(r, 0, name, mono)
         ws.write_number(r, 1, len(rows), mono)
+        ws.write_string(r, 2, f"on sheet {idx:02d} {name}", mono)
 
-    for name, header, rows in TABLES:
-        ws = wb.add_worksheet(name[:31])
+    # Sheet names are deliberately NOT the table names. Excel allows a sheet and
+    # a table to share a name, but Power Query then has to disambiguate them in
+    # its Navigator and appends the table's id - so "dim_year" imports as
+    # "dim_year1", and every DAX measure written against "dim_year" breaks. The
+    # numeric prefix keeps the tabs in load order for anyone browsing the file
+    # in Excel, and leaves the clean name free for the table, which is the thing
+    # Power BI actually imports.
+    for idx, (name, header, rows) in enumerate(TABLES, start=1):
+        ws = wb.add_worksheet(f"{idx:02d} {name}"[:31])
         ws.freeze_panes(1, 0)
         for j, h in enumerate(header):
             ws.set_column(j, j, min(max(len(str(h)) + 4, 12), 46))
@@ -1211,11 +1221,16 @@ If you hit it anyway, fall back to the sixteen CSVs in `data/` - same data, and
 CSV has no format to misread. Import them one at a time, or use Power BI
 Desktop's folder connector if you have Windows access.
 
-**The Navigator lists both `dim_year (Sheet)` and `dim_year (Table)`.**
+**The Navigator lists `dim_year1`, `dim_scenario2`, `fact_financials8` …**
 
-Expected. Tick the Table. The sheet and the table deliberately share a name so
-the tables are easy to find; the Table version carries typed columns and a
-defined header row, the Sheet version is the raw grid.
+You are using a workbook generated before this was fixed. Excel permits a sheet
+and a table to share a name, but Power Query then appends the table's id to tell
+them apart - and `dim_year1` breaks every measure written against `dim_year`.
+
+Regenerate the workbook (`python src/build_08_powerbi.py`), or import the
+un-numbered items instead: those are the sheets, and they carry the correct
+names. In the current workbook the sheets are prefixed `01 `, `02 ` and so on,
+so there is no collision and the Tables import under their own names.
 
 **Measures return blank after loading.**
 

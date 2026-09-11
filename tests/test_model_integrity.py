@@ -610,14 +610,36 @@ def test_powerbi_workbook_has_no_inline_strings_or_typed_numbers(pbi_built):
             assert 't="n"' not in xml, f'{n} writes t="n" on numeric cells'
 
 
+def _tables(wb):
+    """Map table name -> worksheet. The table name is what Power BI imports."""
+    out = {}
+    for ws in wb.worksheets:
+        for t in ws.tables:
+            out[t] = ws
+    return out
+
+
 def test_powerbi_workbook_tables_are_named_excel_tables(pbi_built):
     from openpyxl import load_workbook
     wb = load_workbook(PBI_XLSX)
-    tabled = {ws.title: list(ws.tables) for ws in wb.worksheets if ws.tables}
+    tabled = _tables(wb)
     csvs = {p.stem for p in PBI_DATA.glob("*.csv")}
-    assert set(tabled) == csvs, "every CSV should have a matching sheet, and vice versa"
-    for sheet, tables in tabled.items():
-        assert tables == [sheet], f"{sheet} should hold exactly one table named after it"
+    assert set(tabled) == csvs, "every CSV should have a matching table, and vice versa"
+    for ws in wb.worksheets:
+        assert len(ws.tables) <= 1, f"{ws.title} holds more than one table"
+
+
+def test_powerbi_sheet_names_never_collide_with_table_names(pbi_built):
+    """
+    Excel allows it; Power Query does not cope with it. When a sheet and a table
+    share a name the Navigator appends the table's id - "dim_year" arrives as
+    "dim_year1" - and every DAX measure written against the clean name breaks.
+    """
+    from openpyxl import load_workbook
+    wb = load_workbook(PBI_XLSX)
+    sheets = set(wb.sheetnames)
+    clashes = sorted(sheets & set(_tables(wb)))
+    assert not clashes, f"sheet names collide with table names: {clashes}"
 
 
 def test_powerbi_readme_sheet_is_not_a_table(pbi_built):
@@ -631,23 +653,21 @@ def test_powerbi_readme_sheet_is_not_a_table(pbi_built):
 def test_powerbi_workbook_matches_the_csvs_cell_for_cell(pbi_built):
     from openpyxl import load_workbook
     wb = load_workbook(PBI_XLSX)
-    for ws in wb.worksheets:
-        if not ws.tables:
-            continue
-        rows = list(_csv.reader(open(PBI_DATA / f"{ws.title}.csv")))
+    for table, ws in _tables(wb).items():
+        rows = list(_csv.reader(open(PBI_DATA / f"{table}.csv")))
         xl = [[c.value for c in r] for r in ws.iter_rows()]
-        assert xl[0] == rows[0], f"{ws.title}: header mismatch"
-        assert len(xl) == len(rows), f"{ws.title}: row count mismatch"
+        assert xl[0] == rows[0], f"{table}: header mismatch"
+        assert len(xl) == len(rows), f"{table}: row count mismatch"
         for i in range(1, len(rows)):
             for j in range(len(rows[0])):
                 a, b = xl[i][j], rows[i][j]
                 if a is None:
-                    assert b == "", f"{ws.title} r{i}c{j}: blank in xlsx, {b!r} in csv"
+                    assert b == "", f"{table} r{i}c{j}: blank in xlsx, {b!r} in csv"
                 elif isinstance(a, (int, float)):
                     assert _math.isclose(float(a), float(b), rel_tol=1e-9, abs_tol=1e-9), \
-                        f"{ws.title} r{i}c{j}: {a} vs {b}"
+                        f"{table} r{i}c{j}: {a} vs {b}"
                 else:
-                    assert str(a) == b, f"{ws.title} r{i}c{j}: {a!r} vs {b!r}"
+                    assert str(a) == b, f"{table} r{i}c{j}: {a!r} vs {b!r}"
 
 
 def test_powerbi_numeric_columns_are_not_text(pbi_built):
@@ -657,7 +677,7 @@ def test_powerbi_numeric_columns_are_not_text(pbi_built):
     """
     from openpyxl import load_workbook
     wb = load_workbook(PBI_XLSX)
-    ws = wb["fact_sensitivity"]          # the one table with genuine missing values
+    ws = _tables(wb)["fact_sensitivity"]   # the one table with genuine missing values
     col = [c.value for c in ws["M"]][1:]  # YearsToReserveFloor
     assert any(v is None for v in col), "expected some blanks in this column"
     assert all(v is None or isinstance(v, (int, float)) for v in col), \
