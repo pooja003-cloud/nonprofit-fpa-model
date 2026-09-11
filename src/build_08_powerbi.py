@@ -1352,6 +1352,29 @@ trying to unpick it by hand.
 
 ## 4. Build the pages
 
+### The scenario slicer, before anything else
+
+`dim_scenario` has four members and they do not overlap in time. **Actual**
+exists only for FY2019-FY2024, because filed results are not a scenario.
+**Downside**, **Base** and **Upside** exist only for FY2025-FY2029.
+
+So a scenario slicer set to Base alone shows nothing before FY2025, and the
+FY2024 cards go blank - `[Total Revenue]` has no Base row to sum. Select
+**Actual and Base together** for any page that spans history and forecast. No
+year holds both, so there is exactly one series per year and nothing is double
+counted.
+
+Leaving the slicer unset is worse than wrong: the forecast years sum all three
+scenarios and read about three times too high, with no error to warn you.
+
+Page 5 inverts this. There the three scenarios are the subject, so select
+Downside, Base and Upside and put `dim_scenario[Scenario]` on the legend. Leave
+Actual off - it would draw a fourth line that stops at FY2024.
+
+Set the slicer to allow multiple selections: Format > Slicer settings >
+Selection, with **Single select** off and **Multi-select with CTRL** off, so
+plain clicks toggle each member.
+
 ### Page 1 - Financial overview
 
 Purpose: can a director see the shape of the organization in ten seconds.
