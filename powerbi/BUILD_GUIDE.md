@@ -2,7 +2,7 @@
 
 A `.pbix` file is a proprietary binary and cannot be generated programmatically,
 so this folder contains everything that goes inside one: the data model, the
-measures, and the assembly spec. Importing the workbook, wiring the thirteen
+measures, and the assembly spec. Importing the workbook, wiring the twelve
 relationships and pasting `measures.dax` reproduces the dashboard.
 
 Power BI Desktop is Windows-only, so on macOS the route is the Power BI service
@@ -28,7 +28,7 @@ imports one file at a time, which is why this workbook exists.
 4. Tick the sixteen tables. Leave `_README` unticked — it is a plain sheet
    rather than an Excel Table, so it appears under *Sheets* and is easy to skip.
 5. Then go to step 2 below. **The import does not create relationships** — Power
-   BI never infers them from a workbook, so all thirteen must be drawn by hand.
+   BI never infers them from a workbook, so all twelve must be drawn by hand.
 
 Creating relationships and measures in the browser needs write access to the
 semantic model, which you have on a model you just created in your own
@@ -256,7 +256,7 @@ so there is no collision and the Tables import under their own names.
 **Measures return blank after loading.**
 
 Almost always a missing relationship rather than a broken measure. The import
-does not create relationships - check all thirteen from section 2 exist, and
+does not create relationships - check all twelve from section 2 exist, and
 that each points from the fact table to the dimension and not the reverse.
 
 ## Reference figures
