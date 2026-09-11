@@ -55,26 +55,38 @@ def write_workbook():
     """
     One workbook, one Excel Table per sheet, for importing in the browser.
 
-    Each range is a real named Excel Table rather than a bare range, because
-    Power BI's import dialog lists named tables separately from raw sheets and
-    carries their column names through cleanly. Empty strings are written as
-    blanks so a numeric column with a missing value does not get typed as text
-    by Power Query's type inference.
-    """
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment
-    from openpyxl.utils import get_column_letter as gcl
-    from openpyxl.worksheet.table import Table, TableStyleInfo
+    Written with xlsxwriter rather than openpyxl. openpyxl's fast writer (used
+    whenever lxml is installed) emits numeric cells as t="n" and strings as
+    inline <is> runs with no sharedStrings.xml part. That is legal OOXML but it
+    is not the shape Excel itself writes, and Power Query rejects it outright
+    with "We were unable to load this Excel file because we couldn't understand
+    its format" - a parser error, not a data error, so it gives no clue which
+    cell is at fault. xlsxwriter produces Excel-shaped output: a real shared
+    string table, and no type attribute on numbers.
 
-    wb = Workbook()
-    wb.remove(wb.active)
+    Each range is a genuine named Excel Table, so Power BI lists it under Tables
+    rather than Sheets. Missing values are written as blanks rather than empty
+    strings, so a numeric column with a gap is not typed as text.
+    """
+    import xlsxwriter
+
+    out = ROOT / "PowerBI_Data_Model.xlsx"
+    wb = xlsxwriter.Workbook(str(out), {"in_memory": True, "strings_to_numbers": False})
+
+    head = wb.add_format({"bold": True, "font_color": "#12324F", "font_size": 14})
+    key = wb.add_format({"bold": True, "font_color": "#12324F", "font_size": 10})
+    body = wb.add_format({"font_size": 10, "text_wrap": True, "valign": "top"})
+    mono = wb.add_format({"font_name": "Consolas", "font_size": 9})
+    hdr = wb.add_format({"bold": True, "font_size": 10})
 
     # Plain sheet, deliberately NOT an Excel Table, so it appears under
     # "Sheets" rather than "Tables" in the import dialog and is easy to skip.
-    ws = wb.create_sheet("_README")
-    ws.sheet_view.showGridLines = False
-    ws.column_dimensions["A"].width = 34
-    ws.column_dimensions["B"].width = 96
+    ws = wb.add_worksheet("_README")
+    ws.hide_gridlines(2)
+    ws.set_column("A:A", 34)
+    ws.set_column("B:B", 96)
+    ndim = sum(1 for n, _, _ in TABLES if n.startswith("dim"))
+    nfact = sum(1 for n, _, _ in TABLES if n.startswith("fact"))
     lines = [
         ("Power BI data model", ""),
         ("", ""),
@@ -87,49 +99,49 @@ def write_workbook():
                  "Both steps are in BUILD_GUIDE.md - relationships are NOT carried over "
                  "by the import and must be created by hand."),
         ("", ""),
-        ("Tables in this workbook", f"{len(TABLES)} - {sum(1 for n, _, _ in TABLES if n.startswith('dim'))} "
-                                    f"dimensions, {sum(1 for n, _, _ in TABLES if n.startswith('fact'))} facts"),
+        ("Tables in this workbook", f"{len(TABLES)} - {ndim} dimensions, {nfact} facts"),
         ("", ""),
         ("Provenance", "Historical figures come from IRS Form 990 filings. Program-level detail "
                        "and all forward-looking figures are analyst assumptions, not the "
                        "organization's guidance. See data/SOURCES.md."),
     ]
-    for i, (k, v) in enumerate(lines, start=1):
-        a = ws.cell(row=i, column=1, value=k)
-        a.font = Font(name="Calibri", size=14 if i == 1 else 10,
-                      bold=True, color="12324F")
-        b = ws.cell(row=i, column=2, value=v)
-        b.font = Font(name="Calibri", size=10, color="1A1A1A")
-        b.alignment = Alignment(wrap_text=True, vertical="top")
+    for i, (k, v) in enumerate(lines):
+        ws.write_string(i, 0, k, head if i == 0 else key)
         if v:
-            ws.row_dimensions[i].height = 13 * (len(v) // 92 + 1)
-    r = len(lines) + 2
-    ws.cell(row=r, column=1, value="Sheet").font = Font(bold=True, color="12324F")
-    ws.cell(row=r, column=2, value="Rows").font = Font(bold=True, color="12324F")
+            ws.write_string(i, 1, v, body)
+            ws.set_row(i, 13 * (len(v) // 92 + 1))
+    r = len(lines) + 1
+    ws.write_string(r, 0, "Sheet", key)
+    ws.write_string(r, 1, "Rows", key)
     for name, _h, rows in TABLES:
         r += 1
-        ws.cell(row=r, column=1, value=name).font = Font(name="Consolas", size=9)
-        ws.cell(row=r, column=2, value=len(rows)).font = Font(name="Consolas", size=9)
+        ws.write_string(r, 0, name, mono)
+        ws.write_number(r, 1, len(rows), mono)
 
     for name, header, rows in TABLES:
-        ws = wb.create_sheet(name[:31])
-        ws.append(header)
-        for row in rows:
-            ws.append([None if v == "" else v for v in row])
+        ws = wb.add_worksheet(name[:31])
+        ws.freeze_panes(1, 0)
+        for j, h in enumerate(header):
+            ws.set_column(j, j, min(max(len(str(h)) + 4, 12), 46))
 
-        ref = f"A1:{gcl(len(header))}{len(rows) + 1}"
-        t = Table(displayName=name, ref=ref)
-        t.tableStyleInfo = TableStyleInfo(name="TableStyleLight9", showRowStripes=True)
-        ws.add_table(t)
+        for i, row in enumerate(rows, start=1):
+            for j, v in enumerate(row):
+                if v == "" or v is None:
+                    ws.write_blank(i, j, None)
+                elif isinstance(v, bool):
+                    ws.write_number(i, j, int(v))
+                elif isinstance(v, (int, float)):
+                    ws.write_number(i, j, v)
+                else:
+                    ws.write_string(i, j, str(v))
 
-        for i, h in enumerate(header, start=1):
-            c = ws.cell(row=1, column=i)
-            c.font = Font(name="Calibri", size=10, bold=True)
-            ws.column_dimensions[gcl(i)].width = min(max(len(str(h)) + 4, 12), 46)
-        ws.freeze_panes = "A2"
+        ws.add_table(0, 0, len(rows), len(header) - 1, {
+            "name": name,
+            "style": "Table Style Light 9",
+            "columns": [{"header": h, "header_format": hdr} for h in header],
+        })
 
-    out = ROOT / "PowerBI_Data_Model.xlsx"
-    wb.save(out)
+    wb.close()
     total = sum(len(r) for _n, _h, r in TABLES)
     print(f"  {'PowerBI_Data_Model.xlsx':<32} {len(TABLES):>5} tables, {total:,} rows")
     return out
@@ -1177,6 +1189,39 @@ says. `Forecast Flag` returns a warning string whenever the selected period is
 not an actual; bind it to a text box on every page that shows forecast data.
 
 ---
+
+## Troubleshooting
+
+**"DataFormat.Error: We were unable to load this Excel file because we couldn't
+understand its format. File contains corrupted data."**
+
+This is a parser error, not a data error - Power Query could not read the file
+at all, which is why it names no sheet, no column and no cell. The file is not
+corrupt in any ordinary sense; it opens fine in Excel.
+
+The cause, if you regenerate the workbook yourself: `openpyxl` switches to a
+faster writer whenever `lxml` is installed, and that writer emits numeric cells
+as `t="n"` and strings as inline runs with no shared string table. Both are
+legal OOXML and neither is what Excel writes, and Power Query refuses the file.
+`src/build_08_powerbi.py` therefore writes this workbook with `xlsxwriter`,
+which produces Excel-shaped output. Seven tests in `tests/` pin that shape, so
+a regression fails the suite rather than reaching Power BI.
+
+If you hit it anyway, fall back to the sixteen CSVs in `data/` - same data, and
+CSV has no format to misread. Import them one at a time, or use Power BI
+Desktop's folder connector if you have Windows access.
+
+**The Navigator lists both `dim_year (Sheet)` and `dim_year (Table)`.**
+
+Expected. Tick the Table. The sheet and the table deliberately share a name so
+the tables are easy to find; the Table version carries typed columns and a
+defined header row, the Sheet version is the raw grid.
+
+**Measures return blank after loading.**
+
+Almost always a missing relationship rather than a broken measure. The import
+does not create relationships - check all thirteen from section 2 exist, and
+that each points from the fact table to the dimension and not the reverse.
 
 ## Reference figures
 

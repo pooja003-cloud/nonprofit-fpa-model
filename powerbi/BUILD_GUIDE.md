@@ -221,6 +221,39 @@ not an actual; bind it to a text box on every page that shows forecast data.
 
 ---
 
+## Troubleshooting
+
+**"DataFormat.Error: We were unable to load this Excel file because we couldn't
+understand its format. File contains corrupted data."**
+
+This is a parser error, not a data error - Power Query could not read the file
+at all, which is why it names no sheet, no column and no cell. The file is not
+corrupt in any ordinary sense; it opens fine in Excel.
+
+The cause, if you regenerate the workbook yourself: `openpyxl` switches to a
+faster writer whenever `lxml` is installed, and that writer emits numeric cells
+as `t="n"` and strings as inline runs with no shared string table. Both are
+legal OOXML and neither is what Excel writes, and Power Query refuses the file.
+`src/build_08_powerbi.py` therefore writes this workbook with `xlsxwriter`,
+which produces Excel-shaped output. Seven tests in `tests/` pin that shape, so
+a regression fails the suite rather than reaching Power BI.
+
+If you hit it anyway, fall back to the sixteen CSVs in `data/` - same data, and
+CSV has no format to misread. Import them one at a time, or use Power BI
+Desktop's folder connector if you have Windows access.
+
+**The Navigator lists both `dim_year (Sheet)` and `dim_year (Table)`.**
+
+Expected. Tick the Table. The sheet and the table deliberately share a name so
+the tables are easy to find; the Table version carries typed columns and a
+defined header row, the Sheet version is the raw grid.
+
+**Measures return blank after loading.**
+
+Almost always a missing relationship rather than a broken measure. The import
+does not create relationships - check all thirteen from section 2 exist, and
+that each points from the fact table to the dimension and not the reverse.
+
 ## Reference figures
 
 These come from the FY2024 filing and should match what the dashboard shows once

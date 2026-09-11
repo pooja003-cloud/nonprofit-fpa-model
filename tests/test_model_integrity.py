@@ -555,3 +555,110 @@ def test_benchmarks_cite_a_named_standard():
     for inp in I.REGISTER:
         if inp.tier == "BENCHMARK":
             assert any(s in inp.source for s in ("give.org", "propelnonprofits", "BBB", "Propel"))
+
+
+# ==========================================================================
+# 12. The Power BI workbook is importable
+#
+# Power BI rejected an earlier version of this file with "We were unable to
+# load this Excel file because we couldn't understand its format". The data was
+# fine; the problem was the shape of the XML. openpyxl's fast writer (used
+# whenever lxml is installed) emits numeric cells as t="n" and strings as
+# inline runs with no shared string table. That is legal OOXML, but it is not
+# what Excel writes, and Power Query's parser refuses it - with an error that
+# names no sheet, no column and no cell.
+#
+# These tests pin the file's shape, not just its contents, because the contents
+# were never what was wrong.
+# ==========================================================================
+
+import csv as _csv           # noqa: E402
+import math as _math         # noqa: E402
+import zipfile               # noqa: E402
+
+PBI_XLSX = ROOT / "powerbi" / "PowerBI_Data_Model.xlsx"
+PBI_DATA = ROOT / "powerbi" / "data"
+
+
+@pytest.fixture(scope="session")
+def pbi_built():
+    import build_08_powerbi as B
+    B.build()
+    return B
+
+
+def test_powerbi_workbook_exists(pbi_built):
+    assert PBI_XLSX.exists(), "the browser-import workbook was not generated"
+
+
+def test_powerbi_workbook_uses_a_shared_string_table(pbi_built):
+    """Excel always writes one. Power Query expects one."""
+    with zipfile.ZipFile(PBI_XLSX) as z:
+        assert "xl/sharedStrings.xml" in z.namelist(), (
+            "no shared string table - the workbook was written by openpyxl's fast "
+            "path again, and Power BI will reject it")
+
+
+def test_powerbi_workbook_has_no_inline_strings_or_typed_numbers(pbi_built):
+    """The two specific markers of the writer that Power Query refused."""
+    with zipfile.ZipFile(PBI_XLSX) as z:
+        sheets = [n for n in z.namelist() if n.startswith("xl/worksheets/sheet")]
+        assert sheets
+        for n in sheets:
+            xml = z.read(n).decode()
+            assert "inlineStr" not in xml, f"{n} uses inline strings"
+            assert 't="n"' not in xml, f'{n} writes t="n" on numeric cells'
+
+
+def test_powerbi_workbook_tables_are_named_excel_tables(pbi_built):
+    from openpyxl import load_workbook
+    wb = load_workbook(PBI_XLSX)
+    tabled = {ws.title: list(ws.tables) for ws in wb.worksheets if ws.tables}
+    csvs = {p.stem for p in PBI_DATA.glob("*.csv")}
+    assert set(tabled) == csvs, "every CSV should have a matching sheet, and vice versa"
+    for sheet, tables in tabled.items():
+        assert tables == [sheet], f"{sheet} should hold exactly one table named after it"
+
+
+def test_powerbi_readme_sheet_is_not_a_table(pbi_built):
+    """It must show under Sheets, not Tables, so it is easy to leave unticked."""
+    from openpyxl import load_workbook
+    wb = load_workbook(PBI_XLSX)
+    assert "_README" in wb.sheetnames
+    assert not wb["_README"].tables
+
+
+def test_powerbi_workbook_matches_the_csvs_cell_for_cell(pbi_built):
+    from openpyxl import load_workbook
+    wb = load_workbook(PBI_XLSX)
+    for ws in wb.worksheets:
+        if not ws.tables:
+            continue
+        rows = list(_csv.reader(open(PBI_DATA / f"{ws.title}.csv")))
+        xl = [[c.value for c in r] for r in ws.iter_rows()]
+        assert xl[0] == rows[0], f"{ws.title}: header mismatch"
+        assert len(xl) == len(rows), f"{ws.title}: row count mismatch"
+        for i in range(1, len(rows)):
+            for j in range(len(rows[0])):
+                a, b = xl[i][j], rows[i][j]
+                if a is None:
+                    assert b == "", f"{ws.title} r{i}c{j}: blank in xlsx, {b!r} in csv"
+                elif isinstance(a, (int, float)):
+                    assert _math.isclose(float(a), float(b), rel_tol=1e-9, abs_tol=1e-9), \
+                        f"{ws.title} r{i}c{j}: {a} vs {b}"
+                else:
+                    assert str(a) == b, f"{ws.title} r{i}c{j}: {a!r} vs {b!r}"
+
+
+def test_powerbi_numeric_columns_are_not_text(pbi_built):
+    """
+    A numeric column containing an empty string is typed as text by Power Query,
+    which silently breaks every measure built on it. Blanks must be blank.
+    """
+    from openpyxl import load_workbook
+    wb = load_workbook(PBI_XLSX)
+    ws = wb["fact_sensitivity"]          # the one table with genuine missing values
+    col = [c.value for c in ws["M"]][1:]  # YearsToReserveFloor
+    assert any(v is None for v in col), "expected some blanks in this column"
+    assert all(v is None or isinstance(v, (int, float)) for v in col), \
+        "missing values were written as empty strings rather than blanks"
