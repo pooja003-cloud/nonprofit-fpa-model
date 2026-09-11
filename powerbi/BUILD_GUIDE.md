@@ -182,8 +182,8 @@ Purpose: can a director see the shape of the organization in ten seconds.
 - Column chart: `Operating Result` by year, conditionally coloured on sign
 - Line chart: `Liquid Runway Months` by year, with reference lines at 3, 6 and 24
   months from `dim_benchmark`
-- Slicers: `dim_year[PeriodType]`, `dim_scenario[Scenario]`
-- Text box bound to `Data Provenance Note`
+- Slicer: `dim_scenario[Scenario]`, with Actual and Base both ticked
+- Multi-row card showing `Data Provenance Note`, full width, under the charts
 
 Set the KPI cards' font colour with `Program Ratio Colour`, `Runway Colour` and
 `Accumulation Colour` (Format > Callout value > fx > Field value).
@@ -230,7 +230,7 @@ of the overrun was serving more people and the rest was unit cost.
 - Card: `Scenario Spread`
 - Table: scenario, `Total Revenue`, `Total Expenses`, `Operating Result`,
   `Total Outcomes` for the final forecast year
-- Text box bound to `Scenario Narrative`
+- Multi-row card showing `Scenario Narrative`
 
 ### Page 6 - Funding and sensitivity
 
@@ -252,6 +252,23 @@ of the overrun was serving more people and the rest was unit cost.
 - Line chart from `fact_quality_tradeoff`: the column
   `fact_quality_tradeoff[Outcomes]` by `fact_quality_tradeoff[QualityFloor]` -
   this table is disconnected, so use its own columns, not `[Total Outcomes]`
+
+### Text measures need a card, not a text box
+
+`Data Provenance Note`, `Scenario Narrative`, `Forecast Flag`, `Runway Status`
+and the other string measures return sentences. A Power BI text box holds typed
+text only and cannot be bound to a measure, so these go in a **multi-row card** -
+the plain Card truncates a long string with an ellipsis where the multi-row card
+wraps it. Size it as a wide, short strip and drop the font to about 10pt.
+
+A real text box is still the right thing for commentary you type yourself, such
+as the variance write-up on page 2. It lives in the top toolbar, not in the
+Visualizations pane.
+
+A `dim_year[PeriodType]` slicer is redundant on any page that already has the
+scenario slicer: ticking Actual alone there gives FY2019-FY2024, because the
+scenarios do not overlap in time with the filed years. Spend the space on the
+provenance card instead.
 
 ## 5. Formatting
 
