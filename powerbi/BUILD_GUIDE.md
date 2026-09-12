@@ -172,6 +172,21 @@ Set the slicer to allow multiple selections: Format > Slicer settings >
 Selection, with **Single select** off and **Multi-select with CTRL** off, so
 plain clicks toggle each member.
 
+### The slicer does not reach the disconnected tables
+
+`fact_sensitivity`, `fact_quality_tradeoff`, `fact_provenance` and
+`dim_benchmark` are deliberately outside the star, so no relationship carries
+the scenario slicer into them. Any visual built on one of those tables needs its
+own visual-level filter on the table's own `Scenario` column.
+
+`[Max Sustainable Shock]` is the one that catches people. Unfiltered it returns
+40%, which is the Upside figure, and it will sit on a Base-case page looking
+perfectly plausible. Filter the card to `fact_sensitivity[Scenario]` = Base and
+it reads 30%.
+
+The disconnection is the right design - wiring these into the star would create
+ambiguous filter paths - but it moves the responsibility onto the visual.
+
 ### Page 1 - Position and outlook
 
 *Is this organization sustainable?*
