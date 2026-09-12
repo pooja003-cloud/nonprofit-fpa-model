@@ -1367,7 +1367,7 @@ counted.
 Leaving the slicer unset is worse than wrong: the forecast years sum all three
 scenarios and read about three times too high, with no error to warn you.
 
-Page 5 inverts this. There the three scenarios are the subject, so select
+Page 3 inverts this. There the three scenarios are the subject, so select
 Downside, Base and Upside and put `dim_scenario[Scenario]` on the legend. Leave
 Actual off - it would draw a fourth line that stops at FY2024.
 
@@ -1375,86 +1375,82 @@ Set the slicer to allow multiple selections: Format > Slicer settings >
 Selection, with **Single select** off and **Multi-select with CTRL** off, so
 plain clicks toggle each member.
 
-### Page 1 - Financial overview
+### Page 1 - Position and outlook
 
-Purpose: can a director see the shape of the organization in ten seconds.
+*Is this organization sustainable?*
 
 - KPI card row: `Total Revenue`, `Total Expenses`, `Operating Result`,
-  `Program Expense Ratio`, `Liquid Runway Months`, `Net Asset Multiple`
+  `Program Expense Ratio`, `Liquid Runway Months`, `Net Asset Multiple`, each
+  filtered to FY2024 on the visual, not the page
 - Line chart: `Total Revenue` and `Total Expenses` by `dim_year[YearLabel]`
-- Column chart: `Operating Result` by year, conditionally coloured on sign
-- Line chart: `Liquid Runway Months` by year, with reference lines at 3, 6 and 24
-  months from `dim_benchmark`
-- Slicer: `dim_scenario[Scenario]`, with Actual and Base both ticked
-- Multi-row card showing `Data Provenance Note`, full width, under the charts
+- Column chart: `Operating Result` by `dim_year[YearLabel]`
+- Line chart: `Liquid Reserves` by `dim_year[YearLabel]` - the reserve draining
+  is the consequence the KPI row only implies
+- Cards: `First Deficit Year`, `Max Sustainable Shock`
+- Slicer: `dim_scenario[Scenario]`, Actual and Base both ticked
+- Table visual showing `Data Provenance Note`, full width along the base
 
-Set the KPI cards' font colour with `Program Ratio Colour`, `Runway Colour` and
-`Accumulation Colour` (Format > Callout value > fx > Field value).
+Set the KPI cards' font colour from `Program Ratio Colour`, `Runway Colour` and
+`Accumulation Colour` (Format > Callout value > fx > Field value). Those three
+measures exist to turn 2.18x against a 3x ceiling into something that reads as a
+warning rather than a number.
 
-### Page 2 - Budget performance
+### Page 2 - Where the money went
+
+*Is the money working?*
 
 - Matrix: rows `dim_account[LineItem]`, values `Total Budget`, `Total Actual`,
-  `Total Variance`, `Variance Pct`, conditionally formatted on
-  `Variance Colour`
-- Waterfall: `fact_variance_bridge`, category `fact_variance_bridge[Step]`,
-  value `fact_variance_bridge[Amount]`, breakdown `fact_variance_bridge[StepType]`
-  - this is the volume-versus-rate decomposition
-- Card: `Variance Direction` for the selected line
-- Text box for the commentary from `03_Budget_vs_Actual.xlsx`
-
-The point of this page is the waterfall. A variance table tells a reader that
-program cost was over budget; the waterfall tells them {abs(engine.budget_vs_actual()["decomposition"]["volume_variance"]) / abs(engine.budget_vs_actual()["decomposition"]["total_program_variance"]):.0%}
-of the overrun was serving more people and the rest was unit cost.
-
-### Page 3 - Programs
-
+  `Total Variance`, `Variance Pct`, conditionally coloured on `Variance Colour`
+- Waterfall: category `fact_variance_bridge[Step]`, value
+  `fact_variance_bridge[Amount]`, breakdown `fact_variance_bridge[StepType]`
 - Table: `dim_program[Program]` with `Total Participants`, `Total Outcomes`,
-  `Outcome Rate`, `Cost per Participant`, `Cost per Outcome`,
+  `Outcome Rate`, `Cost per Outcome`, `Capacity Utilisation`,
   `Earnings Gain per Dollar`
 - Scatter: X `Cost per Outcome`, Y `Average Gain per Outcome`, size
-  `Program Cost`, legend `dim_program[Program]`. This single visual carries the
-  whole finding - the cheap programs and the high-value programs are different
-  programs.
-- Bar: `Capacity Utilisation` by program, with a reference line at 100%
-- Slicer: `dim_year[Year]`, `dim_scenario[Scenario]`
+  `Program Cost`, legend `dim_program[Program]`
+- Text box for the commentary from `03_Budget_vs_Actual.xlsx`
 
-### Page 4 - Forecast
+Two visuals carry this page. The waterfall takes "program cost came in over
+budget" and splits it: 76% of the overrun was serving more people than planned
+and 24% was unit cost. The scatter shows the cheap programs and the high-value
+programs are different programs - a placement costs $6,667 in Digital Learning
+and $13,548 in Credential Support, but Credential Support delivers 2.4 times
+the earnings gain per person placed.
 
-- Line chart: `Total Revenue`, `Total Expenses` by year, split actual and
-  forecast using `dim_year[PeriodType]` on the legend
-- Line chart: `Liquid Reserves` by year
-- Card: `First Deficit Year` - the crossover into structural deficit
-- Line chart: `Total Participants` and `Total Outcomes` by year
+Everything here is FY2024 and carries no scenario, so this page needs no slicer.
 
-### Page 5 - Scenarios
+### Page 3 - Risk and choices
+
+*What can it absorb, and what should it do?*
 
 - Line chart: `Operating Result` by year, legend `dim_scenario[Scenario]`
-- Line chart: `Liquid Runway Months` by year, legend scenario, reference line at 6
-- Card: `Scenario Spread`
-- Table: scenario, `Total Revenue`, `Total Expenses`, `Operating Result`,
-  `Total Outcomes` for the final forecast year
-- Multi-row card showing `Scenario Narrative`
-
-### Page 6 - Funding and sensitivity
-
-- Donut or bar: `Funding Amount` by `dim_funding_source[FundingSource]`
-- Card: `Institutional Funding Share` - the concentration measure that matters
-  most for this organization
-- Line chart from `fact_sensitivity`: `Sensitivity Runway` by
-  `fact_sensitivity[FundingShock]`, legend `fact_sensitivity[Scenario]`,
-  reference line at 6 months
+- Line chart: `Liquid Runway Months` by year, legend scenario, reference line at
+  6 months
 - Column chart: `Sensitivity Outcomes Lost` by `fact_sensitivity[FundingShock]`
-- Card: `Max Sustainable Shock`
-
-### Page 7 - Allocation
-
-- Clustered bar from `fact_allocation`: `Total Allocation` by program, legend
+- Bar: `Funding Amount` by `dim_funding_source[FundingSource]`, with a
+  `Institutional Funding Share` card beside it
+- Clustered bar: `Total Allocation` by program, legend
   `fact_allocation[ObjectiveLabel]`
-- Table: `fact_allocation[ObjectiveLabel]`, `Additional Outcomes`,
-  `Additional Earnings`, `Allocation Avg Gain`, `Outcomes Forgone vs Best`
-- Line chart from `fact_quality_tradeoff`: the column
-  `fact_quality_tradeoff[Outcomes]` by `fact_quality_tradeoff[QualityFloor]` -
-  this table is disconnected, so use its own columns, not `[Total Outcomes]`
+- Table: `fact_allocation[ObjectiveLabel]` with `Additional Outcomes`,
+  `Additional Earnings`, `Allocation Cost per Outcome`
+- Slicer: `dim_scenario[Scenario]` with Downside, Base and Upside ticked and
+  Actual left off - it would draw a fourth line that stops at FY2024
+
+The allocation table is the page's argument. The three objectives disagree:
+optimising an incremental $1M for placement count and for earnings gain produce
+almost opposite allocations. Presenting one "optimal" answer would hide the only
+decision that genuinely belongs to management.
+
+### Three pages, not seven
+
+An earlier version of this guide split the same material across seven pages.
+That suits a board pack read for an hour; it does not suit a reader who opens
+the report once. Three things were dropped rather than merged, and each remains
+in the Excel workbooks and the management report: participants and outcomes as a
+time series, which lands harder as an outcome rate in the program table; the
+quality-floor frontier, which needs a paragraph of setup a canvas cannot give
+it; and the scenario narratives, which are four long paragraphs that read
+properly in a PDF and badly in a visual.
 
 ### Text measures need a card, not a text box
 
