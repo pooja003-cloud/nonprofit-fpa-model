@@ -98,6 +98,31 @@ one before.
 > cannot see the six workbooks at all. The Python exists to generate and verify
 > the Excel models, not the other way round.
 
+### The dashboard
+
+Three pages, built on the star schema in `powerbi/` and verified against the
+FY2024 filing by `powerbi/verify_model.dax`.
+
+![Position and outlook](powerbi/screenshots/01-position-and-outlook.png)
+
+*Six KPIs against the filing, revenue crossing expenses around FY2028, the
+surplus falling into deficit in FY2029 — and reserves still climbing to $54M in
+FY2028, peaking in the year the operating position turns.*
+
+![Budget variance and program economics](powerbi/screenshots/02-budget-and-programs.png)
+
+*The waterfall splits the FY2024 program cost overrun: $659k volume, $211k rate.
+The scatter shows why that matters — Digital Learning produces a placement for
+$6,667 but converts 4.5% of participants, Credential Support costs twice as much
+and converts seven times better.*
+
+![Scenario risk, funding sensitivity and allocation](powerbi/screenshots/03-risk-and-choices.png)
+
+*Downside runway falling toward the reserve floor while Upside climbs; nothing
+lost to a funding cut until it passes 30%; and three allocations of the same $1M
+that disagree — 112 placements at $7,838 each, or 85 at $10,357 with $444k more
+earnings gain.*
+
 ## Modelling decisions worth defending
 
 A few choices depart from the obvious approach. Each was made deliberately.
@@ -191,7 +216,7 @@ itself does not.
 ```
 excel-models/       The deliverable — six workbooks, live formulas throughout
 reports/            Management report and executive summary, as PDFs
-powerbi/            Star schema, DAX measure library, build guide
+powerbi/            Star schema, DAX measure library, build guide, screenshots
 data/
   raw/              Form 990 extracts, impact metrics, sector benchmarks
   processed/        Analysis outputs as CSV
