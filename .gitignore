@@ -19,3 +19,6 @@ env/
 Thumbs.db
 .vscode/
 .idea/
+
+# The desktop app drops delivered files here; the originals live in powerbi/
+Claude outputs/
