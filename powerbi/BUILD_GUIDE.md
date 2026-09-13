@@ -177,7 +177,7 @@ plain clicks toggle each member.
 `fact_sensitivity`, `fact_quality_tradeoff`, `fact_provenance` and
 `dim_benchmark` are deliberately outside the star, so no relationship carries
 the scenario slicer into them. Any visual built on one of those tables needs its
-own visual-level filter on the table's own `Scenario` column.
+own visual-level filter on that table's own scenario column.
 
 `[Max Sustainable Shock]` is the one that catches people. Unfiltered it returns
 40%, which is the Upside figure, and it will sit on a Base-case page looking
@@ -229,7 +229,19 @@ programs are different programs - a placement costs $6,667 in Digital Learning
 and $13,548 in Credential Support, but Credential Support delivers 2.4 times
 the earnings gain per person placed.
 
-Everything here is FY2024 and carries no scenario, so this page needs no slicer.
+The two budget visuals need no filter: `fact_budget_variance` and
+`fact_variance_bridge` are FY2024-only and carry no scenario.
+
+`fact_program` is not. It spans FY2019-FY2029 and all four scenarios, so the
+program table and the scatter need a visual-level filter of `dim_year[Year]` =
+2024 - FY2024 carries only the Actual scenario, so the year alone is enough.
+Without it the table reports 201,381 participants against a true FY2024 figure
+of 10,786, and every rate and unit cost is computed over eleven years of a
+four-way scenario fan. The numbers look like numbers; nothing warns you.
+
+Check them against FY2024: Career Coaching 2,050 participants and 861 outcomes,
+Digital Learning 7,395 and 333, Credential Support 700 and 217, Partner Capacity
+641 and 83. Totals 10,786 and 1,494.
 
 ### Page 3 - Risk and choices
 
