@@ -4,7 +4,7 @@ An FP&A model for a real US nonprofit, built entirely from public data plus
 clearly labelled analyst assumptions. Excel is the deliverable; Python builds and
 verifies it.
 
-**Anchor organization:** Upwardly Global (EIN 94-3346127) — a 501(c)(3) helping
+**Anchor organization:** Upwardly Global (EIN 94-3346127) is a 501(c)(3) helping
 work-authorized immigrants and refugees with professional credentials re-enter
 skilled employment.
 **Analysis as of:** FY2024 Form 990, filed 17 October 2025.
@@ -25,13 +25,13 @@ skilled employment.
 
 For this organization the question arrives in an unusual form. It is not short of
 money. Six consecutive operating surpluses have built net assets to **$39.9M
-against annual expenses of $18.3M** — 2.18× cover and roughly 24 months of liquid
+against annual expenses of $18.3M**: 2.18× cover and roughly 24 months of liquid
 runway. It could absorb a permanent 32% cut in contributions without cutting a
 single program inside five years.
 
 The planning problem is that a revenue surge driven by circumstances outside the
 organization's control has left it with a cost base sized to funding that is
-unlikely to repeat — and a balance sheet large enough to disguise how long that
+unlikely to repeat, and a balance sheet large enough to disguise how long that
 has been true.
 
 ## What the analysis found
@@ -40,8 +40,8 @@ has been true.
 Revenue compounded at 33.5% a year from FY2019 to FY2024 (from $6.75M to $28.6M),
 almost entirely through contributions tied to the Afghanistan and Ukraine
 displacement responses. Expenses compounded at 27.0%. The gap produced $36.7M of
-cumulative surplus. On Base case assumptions — where institutional funding
-normalises rather than collapses — the organization **crosses into structural
+cumulative surplus. On Base case assumptions, where institutional funding
+normalises rather than collapses, the organization **crosses into structural
 deficit in FY2029** and reaches its reserve floor around FY2033. Closing the gap
 needs contributions roughly **6.3% above trajectory**.
 
@@ -49,7 +49,7 @@ needs contributions roughly **6.3% above trajectory**.
 FY2024 served **503 more participants than planned and produced 29 fewer
 successful outcomes.** The outcome rate fell from 14.8% to 13.9% as growth came
 through lower-converting channels. Decomposed, 76% of the program cost overrun
-was volume and 24% was rate — the organization served more people, less
+was volume and 24% was rate. The organization served more people, less
 effectively. This is a mix problem, not a cost problem, and cost discipline will
 not fix it.
 
@@ -57,7 +57,7 @@ not fix it.
 Digital Learning produces a placement for $6,667; Credential Support costs
 $13,548 but delivers 2.4× the earnings gain per person placed. Optimising an
 incremental $1M for **placement count** and for **earnings gain** produce almost
-opposite allocations — 112 placements at $45,898 average gain, versus 85
+opposite allocations: 112 placements at $45,898 average gain, versus 85
 placements at $65,879. The recommended balanced allocation gives up 2.8% of
 placement count to lift average gain by 5%, and beats a pro-rata roll-forward by
 21 placements a year.
@@ -73,7 +73,7 @@ Standard 10 ceiling of 3×.
 
 ## Deliverables
 
-**The Excel models are the deliverable.** Read them in order — each builds on the
+**The Excel models are the deliverable.** Read them in order, because each builds on the
 one before.
 
 | `excel-models/` | What it contains |
@@ -89,12 +89,12 @@ one before.
 |---|---|
 | `reports/Management_Report.pdf` | Seven-page management report answering the six recommendation questions. |
 | `reports/Executive_Summary.pdf` | Two-page summary for a board or hiring manager. |
-| `powerbi/` | A validated star schema — 7 dimensions, 9 fact tables, 12 relationships — and a 98-measure DAX library in two forms: one definition at a time for Power BI Desktop, and a single `DEFINE` block that the Power BI Service creates in one action. `verify_model.dax` checks the deployed model against the FY2024 filing and returns a pass or fail on each of twelve figures. `BUILD_GUIDE.md` specifies three dashboard pages visual by visual, including the filter-context traps that produce plausible wrong numbers. `PowerBI_Data_Model.xlsx` holds all sixteen tables in one workbook for browser import; the CSVs in `powerbi/data/` are the same rows for Desktop's folder connector. |
-| `data/` | Raw Form 990 extracts, published impact metrics, sector benchmarks, and processed analysis outputs as CSV. `SOURCES.md` records every source and — importantly — what could not be obtained. |
+| `powerbi/` | A validated star schema (7 dimensions, 9 fact tables, 12 relationships) and a 98-measure DAX library in two forms: one definition at a time for Power BI Desktop, and a single `DEFINE` block that the Power BI Service creates in one action. `verify_model.dax` checks the deployed model against the FY2024 filing and returns a pass or fail on each of twelve figures. `BUILD_GUIDE.md` specifies three dashboard pages visual by visual, including the filter-context traps that produce plausible wrong numbers. `PowerBI_Data_Model.xlsx` holds all sixteen tables in one workbook for browser import; the CSVs in `powerbi/data/` are the same rows for Desktop's folder connector. |
+| `data/` | Raw Form 990 extracts, published impact metrics, sector benchmarks, and processed analysis outputs as CSV. `SOURCES.md` records every source and, importantly, what could not be obtained. |
 | `src/`, `tests/` | The build and verification harness. See [Repository layout](#repository-layout). |
 
 > **A note on the language bar.** GitHub reports this repository as Python,
-> because GitHub's language detection has no category for `.xlsx` files — it
+> because GitHub's language detection has no category for `.xlsx` files, so it
 > cannot see the six workbooks at all. The Python exists to generate and verify
 > the Excel models, not the other way round.
 
@@ -106,13 +106,13 @@ FY2024 filing by `powerbi/verify_model.dax`.
 ![Position and outlook](powerbi/screenshots/01-position-and-outlook.png)
 
 *Six KPIs against the filing, revenue crossing expenses around FY2028, the
-surplus falling into deficit in FY2029 — and reserves still climbing to $54M in
+surplus falling into deficit in FY2029, and reserves still climbing to $54M in
 FY2028, peaking in the year the operating position turns.*
 
 ![Budget variance and program economics](powerbi/screenshots/02-budget-and-programs.png)
 
 *The waterfall splits the FY2024 program cost overrun: $659k volume, $211k rate.
-The scatter shows why that matters — Digital Learning produces a placement for
+The scatter shows why that matters: Digital Learning produces a placement for
 $6,667 but converts 4.5% of participants, Credential Support costs twice as much
 and converts seven times better.*
 
@@ -120,7 +120,7 @@ and converts seven times better.*
 
 *Downside runway falling toward the reserve floor while Upside climbs; nothing
 lost to a funding cut until it passes 30%; and three allocations of the same $1M
-that disagree — 112 placements at $7,838 each, or 85 at $10,357 with $444k more
+that disagree: 112 placements at $7,838 each, or 85 at $10,357 with $444k more
 earnings gain.*
 
 ## Modelling decisions worth defending
@@ -143,7 +143,7 @@ operations, so quoting one without saying which is a mistake.
 
 **Funding cuts force program cuts.** Without this, a revenue shock produces an
 eternal deficit no board would permit, and beneficiary counts never move. With
-the reserve floor enforced, a large enough shock contracts program spending — and
+the reserve floor enforced, a large enough shock contracts program spending, and
 the participants and outcomes forgone become the number the sensitivity analysis
 actually reports.
 
@@ -174,14 +174,14 @@ to it exactly.
 One example of what this catches: Form 990 reports gross contributions, program
 service revenue and investment income, but states total revenue **net** of
 fundraising-event costs and asset-sale losses. The gross lines therefore sum to
-more than reported revenue — by $34k to $135k a year. The model carries that
+more than reported revenue, by $34k to $135k a year. The model carries that
 difference on its own line rather than quietly overstating revenue. The
 discrepancy was found by a reconciliation check, not by reading the form.
 
 ## Verification
 
-142 automated tests. Every workbook is recalculated headlessly with LibreOffice —
-which forces evaluation of formulas `openpyxl` writes but never computes — and
+142 automated tests. Every workbook is recalculated headlessly with LibreOffice,
+which forces evaluation of formulas `openpyxl` writes but never computes, and
 the results are checked against an independent Python implementation of the same
 model.
 
@@ -214,7 +214,7 @@ itself does not.
 ## Repository layout
 
 ```
-excel-models/       The deliverable — six workbooks, live formulas throughout
+excel-models/       The deliverable: six workbooks, live formulas throughout
 reports/            Management report and executive summary, as PDFs
 powerbi/            Star schema, DAX measure library, build guide, screenshots
 data/
@@ -223,7 +223,7 @@ data/
   SOURCES.md        Every source, and what could not be obtained
 
 src/
-  inputs.py         Single source of truth — every number, with provenance
+  inputs.py         Single source of truth: every number, with provenance
   provenance.py     Provenance tagging and the assumptions register
   engine.py         Reference implementation: historical, forecast, scenarios,
                     sensitivity, budget variance, program economics, allocation LP
@@ -239,7 +239,7 @@ tests/
 Python's role is deliberately supporting: it generates the workbooks so they are
 reproducible when an assumption changes, and it provides the independent
 implementation the tests check Excel against. The Excel models carry live
-formulas throughout — change a driver on an inputs sheet and the forecast, the
+formulas throughout. Change a driver on an inputs sheet and the forecast, the
 ratios, the cash roll-forward and the dashboard all move.
 
 ## Known limitations
@@ -254,7 +254,7 @@ ratios, the cash roll-forward and the dashboard all move.
   would change if the real distribution differs materially.
 - **Marginal cost is assumed constant** in the allocation model. Real expansion
   faces rising marginal cost, and the effect is strongest in the cheapest
-  program — so the linear model overstates the case for concentration. The
+  program, so the linear model overstates the case for concentration. The
   direction of that bias is stated rather than hidden.
 - **Participant counts before FY2022 are back-cast** at the growth rate observed
   between 2022 and 2025, through a period containing the pandemic. Illustrative
